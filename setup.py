@@ -39,7 +39,9 @@ requirements = ['Baker',
                 'termcolor',
                 'tinify',
                 'beautifulsoup4',
-                'Wand']
+                'SQLAlchemy',
+                'GeoAlchemy',
+                'google-cloud-vision']
 
 README = os.path.join(HERE, "README.rst")
 description = "".join(open(README).readlines()[4:])
