@@ -18,7 +18,7 @@ PostgreSQL database creation & setup
 
 Create the birdseye database, user and set it up with the GIS extension.
 
-.. codeblock:: bash
+.. code:: bash
     sudo apt-get install postgresql libpq-dev
     sudo -i -u postgres
 
@@ -43,7 +43,7 @@ Python virtualenv setup
 
 Requires python 3.5 (and above) and python-pew to manage the python virtualenv.
 
-.. codeblock:: bash
+.. code:: bash
     pew new birdseye
     pip install -r dev-requirements.txt
 
@@ -51,7 +51,7 @@ Requires python 3.5 (and above) and python-pew to manage the python virtualenv.
 Testing
 -------
 
-.. codeblock:: bash
+.. code:: bash
     birdseye --help
     birdseye db create
     birdseye runserver
