@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
+import sqlalchemy
 import uuid
 from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Float
 from geoalchemy2 import Geometry
 from sqlalchemy import or_, and_, between
 from sqlalchemy.orm import aliased
 
 from birdseye import db
+
+
+def set_path_and_utc(db_conn, conn_proxy):
+    c = db_conn.cursor()
+    c.execute("SET timezone='utc'")
+    c.execute('SET search_path=public, contrib;')
+    c.close()
+sqlalchemy.event.listen(sqlalchemy.pool.Pool, 'connect', set_path_and_utc)
 
 
 class CMDR(object):
@@ -66,7 +76,8 @@ class Observation(CMDR, db.Model):
     '''
     observation_id = db.Column(UUID, primary_key=True)
     user_id = db.Column(UUID)
-    location = db.Column(Geometry('POINT'))
+    position = db.Column(Geometry('POINT'), nullable=False)
+    radius = db.Column(Float, default=1.0, nullable=False)
 
     def __init__(self, user_id, location):
         self.id = str(uuid.uuid1())

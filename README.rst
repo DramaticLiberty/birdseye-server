@@ -26,16 +26,11 @@ Create the birdseye database, user and set it up with the GIS extension.
    # Create a new user (if a user named 'birdseye' does not exist already)
    createuser -P birdseye (password birdseye)
 
-   createdb -E UNICODE -O birdseye birdseye
+   createdb -E UTF8 -O birdseye birdseye
    createlang plpgsql birdseye
-   psql -c "CREATE EXTENSION adminpack;"
-
+   psql -d birdseye -c "CREATE EXTENSION postgis;"
+   psql -d birdseye -c "CREATE EXTENSION postgis_topology;"
    psql birdseye
-   CREATE SCHEMA postgis;
-   ALTER DATABASE birdseye SET search_path=public, postgis, contrib;
-   \connect birdseye;
-   CREATE EXTENSION postgis SCHEMA postgis;
-   SELECT postgis_full_version();
    grant all on database birdseye to "birdseye";
    grant all on spatial_ref_sys to "birdseye";
    grant all on geometry_columns to "birdseye";
