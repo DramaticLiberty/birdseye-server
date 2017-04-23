@@ -40,7 +40,7 @@ requirements = ['Baker',
                 'tinify',
                 'beautifulsoup4',
                 'SQLAlchemy',
-                'GeoAlchemy',
+                'GeoAlchemy2',
                 'google-cloud-vision']
 
 README = os.path.join(HERE, "README.rst")
