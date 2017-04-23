@@ -3,12 +3,10 @@ birdseye-server
 
 The Flask-based, PostgreSQL backed REST API to capture observations on the migration patterns of endangered species
 
-
 Installation
 ============
 
 TODO
-
 
 Development
 ===========
@@ -19,6 +17,7 @@ PostgreSQL database creation & setup
 Create the birdseye database, user and set it up with the GIS extension.
 
 .. code:: bash
+
     sudo apt-get install postgresql libpq-dev
     sudo -i -u postgres
 
@@ -37,25 +36,24 @@ Create the birdseye database, user and set it up with the GIS extension.
     grant all on geometry_columns to "birdseye";
     \q
 
-
 Python virtualenv setup
 -----------------------
 
 Requires python 3.5 (and above) and python-pew to manage the python virtualenv.
 
 .. code:: bash
+
     pew new birdseye
     pip install -r dev-requirements.txt
-
 
 Testing
 -------
 
 .. code:: bash
+
     birdseye --help
     birdseye db create
     birdseye runserver
-
 
 Changelog
 =========
