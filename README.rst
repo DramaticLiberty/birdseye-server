@@ -18,23 +18,28 @@ Create the birdseye database, user and set it up with the GIS extension.
 
 .. code:: bash
 
-    sudo apt-get install postgresql libpq-dev
-    sudo -i -u postgres
+   sudo apt-get install postgresql-9.6
+   sudo apt-get install postgresql-9.6-postgis-2.3 postgresql-contrib-9.6 libpq-dev postgis
 
-    # Create a new user (if a user named 'birdseye' does not exist already)
-    createuser -P birdseye (password birdseye)
+   sudo -i -u postgres 
 
-    createdb -E UNICODE -O birdseye birdseye
-    createlang plpgsql gis
-    psql -d birdseye -f /usr/share/postgresql-9.5-postgis/lwpostgis.sql
-    psql -d birdseye -f /usr/share/postgresql-9.5-postgis/spatial_ref_sys.sql
+   # Create a new user (if a user named 'birdseye' does not exist already)
+   createuser -P birdseye (password birdseye)
 
-    # Grant permissions to user 'birdseye' on the new database
-    psql birdseye
-    grant all on database birdseye to "birdseye";
-    grant all on spatial_ref_sys to "birdseye";
-    grant all on geometry_columns to "birdseye";
-    \q
+   createdb -E UNICODE -O birdseye birdseye
+   createlang plpgsql birdseye
+   psql -c "CREATE EXTENSION adminpack;"
+
+   psql birdseye
+   CREATE SCHEMA postgis;
+   ALTER DATABASE birdseye SET search_path=public, postgis, contrib;
+   \connect birdseye;
+   CREATE EXTENSION postgis SCHEMA postgis;
+   SELECT postgis_full_version();
+   grant all on database birdseye to "birdseye";
+   grant all on spatial_ref_sys to "birdseye";
+   grant all on geometry_columns to "birdseye";
+   \q
 
 Python virtualenv setup
 -----------------------
@@ -43,17 +48,17 @@ Requires python 3.5 (and above) and python-pew to manage the python virtualenv.
 
 .. code:: bash
 
-    pew new birdseye
-    pip install -r dev-requirements.txt
+   pew new birdseye
+   pip install -r dev-requirements.txt
 
 Testing
 -------
 
 .. code:: bash
-
-    birdseye --help
-    birdseye db create
-    birdseye runserver
+          
+   birdseye --help
+   birdseye reset_tables
+   birdseye runserver
 
 Changelog
 =========
