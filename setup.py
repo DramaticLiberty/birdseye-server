@@ -42,7 +42,9 @@ requirements = ['Baker',
                 'SQLAlchemy',
                 'GeoAlchemy2',
                 'Flask-SQLAlchemy',
+                'Flask-Migrate',
                 'Flask-RESTful',
+                'Flask-Script',
                 'google-cloud-vision']
 
 README = os.path.join(HERE, "README.rst")
@@ -85,7 +87,7 @@ setup(
     packages=find_packages_by_root_package(PROVIDES),
     include_package_data=True,
     py_modules=[],
-    scripts=['bin/birdseye', 'bin/birdseye-test'],
+    scripts=['bin/birdseye'],
     entry_points={
         "console_scripts": [],
         "distutils.commands": [],
