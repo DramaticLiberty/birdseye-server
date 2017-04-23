@@ -41,6 +41,8 @@ requirements = ['Baker',
                 'beautifulsoup4',
                 'SQLAlchemy',
                 'GeoAlchemy2',
+                'Flask-SQLAlchemy',
+                'Flask-RESTful',
                 'google-cloud-vision']
 
 README = os.path.join(HERE, "README.rst")
