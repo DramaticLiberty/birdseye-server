@@ -87,14 +87,15 @@ setup(
     packages=find_packages_by_root_package(PROVIDES),
     include_package_data=True,
     py_modules=[],
-    scripts=['bin/birdseye'],
+    scripts=['bin/birdseye', 'bin/birdseye-test'],
     entry_points={
         "console_scripts": [],
         "distutils.commands": [],
     },
     install_requires=requirements,
     test_suite="nose.collector",
-    tests_require=["nose>=1.3", "mock>=1.0", "PyHamcrest>=1.8", "nose-timer>=0.7.0"],
+    tests_require=[
+        "nose>=1.3", "mock>=1.0", "PyHamcrest>=1.8", "nose-timer>=0.7.0"],
     cmdclass={
     },
     extras_require={},

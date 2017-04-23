@@ -53,6 +53,7 @@ Testing
           
    birdseye --help
    birdseye reset_tables
+   birdseye test       
    birdseye runserver
 
 Changelog

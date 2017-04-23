@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Project Birdseye server source package
+Project Birdseye server source package. Requires gevent greenlet patch.
 '''
-from gevent import monkey
-monkey.patch_all(thread=False)
-
-from flask import Flask  # noqa
-from flask_sqlalchemy import SQLAlchemy  # noqa
-import logging.config  # noqa
-import sys  # noqa
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+import logging.config
+import sys
 
 
 def _get_version():
