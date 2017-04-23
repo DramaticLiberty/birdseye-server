@@ -61,6 +61,27 @@ def assert_ok(code, response):
     return jr
 
 
+class UserTest(object):
+    def setup(self):
+        self.client = BirdsEyeClient(app.test_client())
+        self.client.delete('/v1/users')
+        self.client.delete('/v1/sessions')
+        self.client.delete('/v1/observations')
+
+    def teardown(self):
+        pass
+
+    @nt.with_setup(setup, teardown)
+    def test_create_user(self):
+        resp = assert_ok(201, self.client.post('/v1/users', {
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+        }))
+        nt.assert_equal(resp['count'], '1')
+        nt.assert_equal(len(resp['data']), 1)
+        nt.assert_is_not_none(resp['data'][0])
+
+
 class SessionTest(object):
 
     def setup(self):
@@ -75,8 +96,10 @@ class SessionTest(object):
     @nt.with_setup(setup, teardown)
     def test_get_session(self):
         resp = assert_ok(200, self.client.post('/v1/sessions', {
-            'fcm_token': '123456789'
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+            'tokens': {'fcm_token': '123456789'}
         }))
-        nt.assert_equal(resp['count'], 1)
+        nt.assert_equal(resp['count'], '1')
         nt.assert_equal(len(resp['data']), 1)
         nt.assert_is_not_none(resp['data'][0])

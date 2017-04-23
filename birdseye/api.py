@@ -1,7 +1,37 @@
 # -*- coding: utf-8 -*-
+'''
+Conventions
+-----------
+
+* Unless otherwise specified, the response is always a JSON object
+* A successful response is always a dictionary with the following keys: \
+'status', 'count', 'data' (in this order). Example:
+
+.. code:: Javascript
+
+    {
+      "status": "success",
+      "count": "1",
+      "data": ["AnImportantValue"]
+    }
+
+* An error response is always a dictionary with the following keys: \
+'status', 'message'. Example:
+
+.. code:: Javascript
+
+    {
+      "status": "error",
+      "message": "Not Found"
+    }
+
+'''
+from flask import request
 from flask_restful import Resource, Api, representations
 import types
-from birdseye import app
+from birdseye import app, db
+import birdseye.models as bm
+
 
 api = Api(app)
 representations.json.settings = {'indent': 4}
@@ -16,10 +46,59 @@ def api_route(self, *args, **kwargs):
 api.route = types.MethodType(api_route, api)
 
 
-@api.route('/v1/observations/{observation_id}')
+def not_found():
+    return {'status': 'error', 'message': 'Found no matches'}, 404
+
+
+@api.route('/v1/users')
+class Users(Resource):
+
+    def post(self):
+        data = request.get_json()
+        user = bm.User(data['credentials'], data['secret'])
+        db.session.add(user)
+        db.session.commit()
+        db.session.refresh(user)
+        return {'status': 'success', 'count': '1', 'data': [user.user_id]}, 201
+
+    def delete(self):
+        count = bm.User.delete_all()
+        return {'status': 'success', 'count': '1', 'data': [count]}
+
+
+@api.route('/v1/sessions')
 class Sessions(Resource):
-    def post(self, credentials):
+    def _filter(self, session):
         return {}
+
+    def post(self):
+        data = request.get_json()
+        user = bm.User.find_user(data['credentials'], data['secret']).first()
+        ses = bm.Session(user.user_id, data.get('tokens'))
+        db.session.add(ses)
+        db.session.commit()
+        db.session.refresh(ses)
+        return {'status': 'success', 'count': '1', 'data': [ses.session_id]}
+
+    def delete(self):
+        count = bm.Session.delete_all()
+        return {'status': 'success', 'count': '1', 'data': [count]}
+
+
+@api.route('/v1/sessions/{session_id}')
+class Session(Resource):
+    def _filter(self, session):
+        return {}
+
+    def post(self, credentials):
+        return {'status': 'success', 'count': '1', 'data': [ses.session_id]}
+
+    def get(self):
+        return {'status': 'success', 'count': '1', 'data': [count]}
+
+    def delete(self):
+        count = bm.Session.delete_all()
+        return {'status': 'success', 'count': '1', 'data': [count]}
 
 
 @api.route('/v1/observations/{observation_id}')
@@ -39,7 +118,11 @@ class Observations(Resource):
         return []
 
     def post(self):
-        return
+        return {}
+
+    def delete(self):
+        count = bm.Observation.delete_all()
+        return {'status': 'success', 'count': '1', 'data': [count]}
 
 
 def noqa():
