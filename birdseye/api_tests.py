@@ -81,6 +81,17 @@ class UserTest(object):
         nt.assert_equal(len(resp['data']), 1)
         nt.assert_is_not_none(resp['data'][0])
 
+    @nt.with_setup(setup, teardown)
+    def test_delete_all_users(self):
+        resp = assert_ok(201, self.client.post('/v1/users', {
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+        }))
+        nt.assert_equal(resp['count'], '1')
+        
+        self.client.delete('/v1/users')
+    
+
 
 class SessionTest(object):
 

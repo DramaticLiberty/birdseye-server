@@ -61,19 +61,35 @@ class Users(Resource):
         db.session.refresh(user)
         return {'status': 'success', 'count': '1', 'data': [user.user_id]}, 201
 
+    def get(self):
+        # TODO: check admin
+        users = bm.User.find_all()
+        return {'status': 'success', 'count': str(len(users)), 'data': [
+            u.as_public_dict for u in users]}
+
     def delete(self):
+        # TODO: check admin
         count = bm.User.delete_all()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
+@api.route('/v1/users/{user_id}')
+class User(Resource):
+
+    def get(self, user_id):
+        # TODO: check session
+        user = bm.User.find_by_id(user_id)
+        return {'status': 'success', 'count': '1', 'data': [
+            user.as_public_dict()]}
+
+
 @api.route('/v1/sessions')
 class Sessions(Resource):
-    def _filter(self, session):
-        return {}
 
     def post(self):
         data = request.get_json()
-        user = bm.User.find_user(data['credentials'], data['secret']).first()
+        user = bm.User.find_by_credentials(
+            data['credentials'], data['secret']).first()
         ses = bm.Session(user.user_id, data.get('tokens'))
         db.session.add(ses)
         db.session.commit()
@@ -81,22 +97,20 @@ class Sessions(Resource):
         return {'status': 'success', 'count': '1', 'data': [ses.session_id]}
 
     def delete(self):
+        # TODO: Admin
         count = bm.Session.delete_all()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
 @api.route('/v1/sessions/{session_id}')
 class Session(Resource):
-    def _filter(self, session):
-        return {}
 
-    def post(self, credentials):
-        return {'status': 'success', 'count': '1', 'data': [ses.session_id]}
-
-    def get(self):
+    def get(self, session_id):
+        # TODO: check session
         return {'status': 'success', 'count': '1', 'data': [count]}
 
     def delete(self):
+        # TODO: check session
         count = bm.Session.delete_all()
         return {'status': 'success', 'count': '1', 'data': [count]}
 

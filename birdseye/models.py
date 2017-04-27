@@ -49,10 +49,13 @@ class User(CMDR, db.Model):
     Users, many are present in the database.
     '''
     user_id = db.Column(UUID, primary_key=True, default=new_uuid)
-    credentials = db.Column(JSONB)  # email, telephone, whatever
+    # email, telephone, whatever
+    credentials = db.Column(JSONB, nullable=False)
     secrets = db.Column(Text)  # pw hash
-    settings = db.Column(JSONB)  # app personal settings
-    social = db.Column(JSONB)  # public stuff: nick name, social links, etc.
+    # app personal settings
+    settings = db.Column(JSONB, nullable=False)
+    # public stuff: nick name, social links, etc.
+    social = db.Column(JSONB)
 
     def __init__(self, credentials, secrets, settings=None, social=None):
         self.credentials = credentials
@@ -60,12 +63,31 @@ class User(CMDR, db.Model):
         self.settings = settings or {}
         self.social = social or {}
 
+    def as_public_dict(self):
+        return {
+            'user_id': self.user_id,
+            'credentials': self.credentials,
+            'settings': self.settings,
+            'social': self.social,
+        }
+
+    def __repr__(self):
+        return '<User %r>' % self.user_id
+
     @classmethod
     def delete_all(cls):
         return cls.query.delete()
 
     @classmethod
-    def find_user(cls, credentials, secrets):
+    def find_all(cls):
+        return cls.query.order_by(cls.created)
+
+    @classmethod
+    def find_by_id(cls, user_id):
+        return cls.query.filter(cls.user_id == user_id).order_by(cls.created)
+
+    @classmethod
+    def find_by_credentials(cls, credentials, secrets):
         query = cls.query.filter(and_(
             cls.credentials == credentials, cls.secrets == secrets))
         return query.order_by(cls.created)
@@ -88,9 +110,24 @@ class Session(CMDR, db.Model):
         self.user_id = user_id
         self.tokens = tokens or {}
 
+    def as_public_dict(self):
+        return {
+            'session_id': self.session_id,
+            'expires': self.expires,
+            'user': self.user.as_public_dict
+        }
+
+    def __repr__(self):
+        return '<Session %r>' % self.session_id
+
     @classmethod
     def delete_all(cls):
         return cls.query.delete()
+
+    @classmethod
+    def find_by_id(cls, session_id):
+        return cls.query.filter(
+            cls.session_id == session_id).order_by(cls.created)
 
 
 class Observation(CMDR, db.Model):
@@ -99,8 +136,8 @@ class Observation(CMDR, db.Model):
     '''
     observation_id = db.Column(UUID, primary_key=True)
     user_id = db.Column(UUID)
-    position = db.Column(Geometry('POINT'), nullable=False)
-    radius = db.Column(Float, default=1.0, nullable=False)
+    geometry = db.Column(Geometry('POLYGON'), nullable=False)
+    properties = db.Column(JSONB, nullable=False)
 
     def __init__(self, user_id, location):
         self.id = str(uuid.uuid1())
