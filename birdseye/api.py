@@ -90,7 +90,9 @@ class Sessions(Resource):
         data = request.get_json()
         user = bm.User.find_by_credentials(
             data['credentials'], data['secret']).first()
-        ses = bm.Session(user.user_id, data.get('tokens'))
+        if user is None:
+            return {'status': 'error', 'message': 'No user.'}, 403
+        ses = bm.Session(user, data.get('tokens'))
         db.session.add(ses)
         db.session.commit()
         db.session.refresh(ses)
@@ -99,6 +101,7 @@ class Sessions(Resource):
     def delete(self):
         # TODO: Admin
         count = bm.Session.delete_all()
+        db.session.commit()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
@@ -107,11 +110,13 @@ class Session(Resource):
 
     def get(self, session_id):
         # TODO: check session
-        return {'status': 'success', 'count': '1', 'data': [count]}
+        session = bm.Session.find_by_id(session_id)
+        return {'status': 'success', 'count': '1', 'data': [
+            session.as_public_dict()]}
 
-    def delete(self):
+    def delete(self, session_id):
         # TODO: check session
-        count = bm.Session.delete_all()
+        count = bm.Session.delete(session_id)
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 

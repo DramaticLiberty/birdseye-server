@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import flask.json
 import sqlalchemy
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
+from psycopg2.extensions import AsIs
+from psycopg2.extras import Json
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import Text, text, ForeignKey, Table, Column
 from sqlalchemy.orm import relationship
@@ -16,6 +19,54 @@ def set_path_and_utc(db_conn, conn_proxy):
     c.execute('SET search_path=public, contrib;')
     c.close()
 sqlalchemy.event.listen(sqlalchemy.pool.Pool, 'connect', set_path_and_utc)
+
+
+class DatetimeIS8601JSONEncoder(flask.json.JSONEncoder):
+
+    def __init__(self, **kwargs):
+        kwargs['ensure_ascii'] = False
+        super(DatetimeIS8601JSONEncoder, self).__init__(**kwargs)
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat().rstrip('0')
+        if isinstance(obj, AsIs):
+            return obj.adapted
+        if isinstance(obj, timedelta):
+            return obj.days
+        return flask.json.JSONEncoder.default(self, obj)
+
+
+class TimedeltaJSONDecoder(flask.json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        self.hook = kwargs.pop("object_hook", None)
+        super(TimedeltaJSONDecoder, self).__init__(
+            *args, object_hook=self.obj_hook, **kwargs)
+
+    def obj_hook(self, d):
+        if isinstance(d, dict):
+            if 'duration' in d:
+                d['duration'] = timedelta(int(d['duration']))
+            return {k: self.obj_hook(v) for k, v in d.items()}
+        if (self.hook):
+            return self.hook(d)
+        return d
+
+
+def json_dumps(*args, **kwargs):
+    # flask.json already has the encoder configured (e.g. for datetime)
+    return flask.json.dumps(
+        *args, encoding='utf8', cls=DatetimeIS8601JSONEncoder, **kwargs)
+
+
+def json_loads(*args, **kwargs):
+    # flask.json already has the decoder configured (e.g. for timedelta)
+    return flask.json.loads(
+        *args, encoding='utf8', cls=TimedeltaJSONDecoder, **kwargs)
+
+
+def PGJson(data):
+    return Json(data, dumps=json_dumps),
 
 
 def new_uuid():
@@ -86,8 +137,9 @@ class User(CMDR, db.Model):
     def find_by_credentials(cls, credentials, secrets):
         query = cls.query.filter(
             text('credentials = :credentials and secrets = :secrets'))
-        return query.params(
-            credentials=credentials, secrets=secrets).order_by(cls.created)
+        query = query.params(
+            credentials=PGJson(credentials), secrets=secrets)
+        return query.order_by(cls.created)
 
 
 class Session(CMDR, db.Model):
@@ -123,6 +175,11 @@ class Session(CMDR, db.Model):
     @classmethod
     def delete_all(cls):
         return cls.query.delete()
+
+    @classmethod
+    def delete(cls, session_id):
+        return cls.query.filter(
+            cls.session_id == session_id).delete()
 
     @classmethod
     def find_by_id(cls, session_id):
@@ -203,8 +260,8 @@ class Observation(CMDR, db.Model):
 
 observation_summary = Table(
     'observation_summary', db.Model.metadata,
-    Column('left_id', UUID, ForeignKey('left.id')),
-    Column('right_id', UUID, ForeignKey('right.id'))
+    Column('observation_id', UUID, ForeignKey('observations.observation_id')),
+    Column('summary_id', UUID, ForeignKey('summaries.summary_id'))
 )
 
 

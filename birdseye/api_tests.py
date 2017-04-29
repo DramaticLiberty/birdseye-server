@@ -11,7 +11,7 @@ class BirdsEyeClient(object):
     def __init__(self, client):
         self.client = client
         self.headers = {}
-        
+
     def get(self, url):
         return self.client.get(
             url, headers=self.headers, follow_redirects=True)
@@ -64,9 +64,9 @@ def assert_ok(code, response):
 class UserTest(object):
     def setup(self):
         self.client = BirdsEyeClient(app.test_client())
-        self.client.delete('/v1/users')
         self.client.delete('/v1/sessions')
         self.client.delete('/v1/observations')
+        self.client.delete('/v1/users')
 
     def teardown(self):
         pass
@@ -88,18 +88,17 @@ class UserTest(object):
             'secret': '12345',
         }))
         nt.assert_equal(resp['count'], '1')
-        
+
         self.client.delete('/v1/users')
-    
 
 
 class SessionTest(object):
 
     def setup(self):
         self.client = BirdsEyeClient(app.test_client())
-        self.client.delete('/v1/users')
         self.client.delete('/v1/sessions')
         self.client.delete('/v1/observations')
+        self.client.delete('/v1/users')
 
     def teardown(self):
         pass
