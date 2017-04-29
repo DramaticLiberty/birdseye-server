@@ -194,23 +194,27 @@ class Species(CMDR, db.Model):
     __tablename__ = 'species'
     species_id = db.Column(UUID, primary_key=True, default=new_uuid)
     # scientific, common, etc
-    species_names = db.Column(JSONB, nullable=False)
+    names = db.Column(JSONB, nullable=False)
     # label bingo: vision, user, etc
-    species_labels = db.Column(JSONB, nullable=False)
+    labels = db.Column(JSONB, nullable=False)
 
-    def __init__(self, species_names, species_labels):
-        self.species_names = species_names
-        self.species_labels = species_labels
+    def __init__(self, names, labels):
+        self.names = names
+        self.labels = labels
 
     def as_public_dict(self):
         return {
             'species_id': self.user_id,
-            'species_names': self.species_names,
-            'species_labels': self.species_labels,
+            'names': self.names,
+            'labels': self.labels,
         }
 
     def __repr__(self):
         return '<Species %r>' % self.observation_id
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.order_by(cls.created).all()
 
     @classmethod
     def delete_all(cls):
