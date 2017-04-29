@@ -144,5 +144,13 @@ class Observations(Resource):
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
+@api.route('/v1/media')
+class Media(Resource):
+
+    def post(self):
+        return dict(status='success', count='1', data=[
+            'https://birdseye.space/cdn/zuzu.jpg']), 200
+
+
 def noqa():
     pass

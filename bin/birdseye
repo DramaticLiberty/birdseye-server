@@ -3,9 +3,12 @@
 import gevent.monkey; gevent.monkey.patch_all()
 
 import sys
+import platform
+from gevent import subprocess
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 
+import birdseye
 from birdseye import app, db
 
 migrate = Migrate(app, db)
@@ -25,6 +28,25 @@ def reset_tables():
 def test():
     '''Runs the tests.'''
     print('\nNot yet implemented. Please use "birdseye-test" instead.\n')
+
+@manager.command
+def runproduction():
+    print('\nStarting gunicorn production.')
+    gunicorn = [
+        'gunicorn',
+        '-w', '2',
+        '-k', 'gevent',
+        '--worker-connections', '1000', # This is the default
+        '--preload',
+        '--timeout', '0', # we are using async workers
+        # for which timeout does not make sense
+        '--keep-alive', '5', # default is 2
+        '--bind', 'unix:{}-gunicorn.sock'.format(platform.node()),
+        '-p', '{}.pid'.format(platform.node()),
+        'birdseye:app']
+    print(' '.join(gunicorn))
+    subprocess.call(gunicorn)
+    print('Server {} terminated.'.format(birdseye.__version__))
 
 if __name__ == '__main__':
     manager.run()

@@ -56,6 +56,15 @@ Testing
    birdseye test       
    birdseye runserver
 
+Production
+----------
+
+In production gunicorn with gevent is used, will bind to a unix socket created in the same dir from where the server is lauched.
+
+.. code:: bash
+
+   birdseye runproduction
+
 Changelog
 =========
 
