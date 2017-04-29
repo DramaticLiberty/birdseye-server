@@ -63,11 +63,12 @@ Install python and friends:
           pythonz install 3.5.3
 
 
-Download and install the Postgres app and start a postgres server 9.6.
+Download and install the Postgres app from http://postgresapp.com/ and start a postgres server 9.6.
 
 Setup a database:
 
 .. code:: bash
+
           brew install postgis
           createdb -E UTF8 -O $USER birdseye
           createlang plpgsql birdseye
@@ -82,6 +83,7 @@ Setup a database:
 Virtual env setup:
 
 .. code:: bash
+
           pew new --python=$(pythonz locate 3.5.3) birdseye
           pip install -r dev-requirements.txt
 
