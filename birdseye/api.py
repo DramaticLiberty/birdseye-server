@@ -159,8 +159,10 @@ class Observations(Resource):
 class Media(Resource):
 
     def post(self):
+        path = request.headers.get('X-File')
+        path = path or 'not-found.jpg'
         return dict(status='success', count='1', data=[
-            'https://birdseye.space/cdn/zuzu.jpg']), 200
+            'https://birdseye.space/static/{}'.format(path)]), 200
 
 
 @api.route('/v1/species')

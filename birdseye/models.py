@@ -204,7 +204,7 @@ class Species(CMDR, db.Model):
 
     def as_public_dict(self):
         return {
-            'species_id': self.user_id,
+            'species_id': self.species_id,
             'names': self.names,
             'labels': self.labels,
         }

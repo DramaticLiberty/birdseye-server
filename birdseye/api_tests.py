@@ -127,3 +127,25 @@ class SessionTest(object):
         nt.assert_equal(resp['count'], '1')
         nt.assert_equal(len(resp['data']), 1)
         nt.assert_is_not_none(resp['data'][0])
+
+
+class SpeciesTest(object):
+
+    def setup(self):
+        self.client = BirdsEyeClient(app.test_client())
+        self.client.delete('/v1/sessions')
+        self.client.delete('/v1/observations')
+        self.client.delete('/v1/users')
+        self.client.delete('/v1/species')
+        assert_ok(201, self.client.post('/v1/species', {
+            'names': {'common': 'pidgeon', 'scientific': 'flying rat'},
+            'labels': ['bird', 'gray'],
+        }))
+
+    def teardown(self):
+        pass
+
+    @nt.with_setup(setup, teardown)
+    def test_get_session(self):
+        resp = assert_ok(200, self.client.get('/v1/species'))
+        nt.assert_equal(resp['count'], '1')
