@@ -41,7 +41,7 @@ def runproduction():
         '--timeout', '0', # we are using async workers
         # for which timeout does not make sense
         '--keep-alive', '5', # default is 2
-        '--bind', 'unix:{}-gunicorn.sock'.format(platform.node()),
+        '--bind', 'unix:/tmp/birdseye_gunicorn.sock',
         '-p', '{}.pid'.format(platform.node()),
         'birdseye:app']
     print(' '.join(gunicorn))
