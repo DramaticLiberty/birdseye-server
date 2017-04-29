@@ -66,6 +66,7 @@ Install python and friends:
 Download and install the Postgres app and start a postgres server 9.6.
 
 Setup a database:
+
 .. code:: bash
           brew install postgis
           createdb -E UTF8 -O $USER birdseye
@@ -79,6 +80,7 @@ Setup a database:
           EOT
 
 Virtual env setup:
+
 .. code:: bash
           pew new --python=$(pythonz locate 3.5.3) birdseye
           pip install -r dev-requirements.txt
