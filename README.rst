@@ -76,9 +76,9 @@ Setup a database:
           psql -d birdseye << EOT
           CREATE EXTENSION postgis;
           CREATE EXTENSION postgis_topology;
-          grant all on database birdseye to "$USER";
-          grant all on spatial_ref_sys to "$USER";
-          grant all on geometry_columns to "$USER";
+          grant all on database birdseye to "birdseye";
+          grant all on spatial_ref_sys to "birdseye";
+          grant all on geometry_columns to "birdseye";
           EOT
 
 Virtual env setup:
