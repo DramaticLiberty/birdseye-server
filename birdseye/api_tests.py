@@ -104,6 +104,10 @@ class SessionTest(object):
         self.client.delete('/v1/sessions')
         self.client.delete('/v1/observations')
         self.client.delete('/v1/users')
+        assert_ok(201, self.client.post('/v1/users', {
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+        }))
 
     def teardown(self):
         pass

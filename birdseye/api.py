@@ -78,6 +78,7 @@ class Users(Resource):
     def delete(self):
         # TODO: check admin
         count = bm.User.delete_all()
+        db.session.commit()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
@@ -125,6 +126,7 @@ class Session(Resource):
     def delete(self, session_id):
         # TODO: check session
         count = bm.Session.delete(session_id)
+        db.session.commit()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 
@@ -149,6 +151,7 @@ class Observations(Resource):
 
     def delete(self):
         count = bm.Observation.delete_all()
+        db.session.commit()
         return {'status': 'success', 'count': '1', 'data': [count]}
 
 

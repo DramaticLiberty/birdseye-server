@@ -123,7 +123,8 @@ class User(CMDR, db.Model):
 
     @classmethod
     def delete_all(cls):
-        return cls.query.delete()
+        result = cls.query.delete()
+        return result
 
     @classmethod
     def find_all(cls):
@@ -174,7 +175,8 @@ class Session(CMDR, db.Model):
 
     @classmethod
     def delete_all(cls):
-        return cls.query.delete()
+        result = cls.query.delete()
+        return result
 
     @classmethod
     def delete(cls, session_id):
@@ -212,7 +214,8 @@ class Species(CMDR, db.Model):
 
     @classmethod
     def delete_all(cls):
-        return cls.query.delete()
+        result = cls.query.delete()
+        return result
 
 
 class Observation(CMDR, db.Model):
@@ -255,7 +258,8 @@ class Observation(CMDR, db.Model):
 
     @classmethod
     def delete_all(cls):
-        return cls.query.delete()
+        result = cls.query.delete()
+        return result
 
 
 observation_summary = Table(
@@ -293,4 +297,5 @@ class Summary(CMDR, db.Model):
 
     @classmethod
     def delete_all(cls):
-        return cls.query.delete()
+        result = cls.query.delete()
+        return result
