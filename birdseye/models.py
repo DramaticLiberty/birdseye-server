@@ -248,17 +248,26 @@ class Observation(CMDR, db.Model):
 
     def as_public_dict(self):
         return {
-            'created': self.created,
+            'created': self.created.isoformat(),
             'observation_id': self.observation_id,
-            'geometry': self.geometry,
+            'geometry': repr(self.geometry),
             'media': self.media,
             'properties': self.properties,
-            'species': self.species.as_public_dict(),
+            'species': self.species.as_public_dict() if self.species else None,
             'author': self.user.social,
         }
 
     def __repr__(self):
         return '<Observation %r>' % self.observation_id
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.order_by(cls.created).all()
+
+    @classmethod
+    def find_by_id(cls, observation_id):
+        return cls.query.filter(cls.observation_id == observation_id).order_by(
+            cls.created)
 
     @classmethod
     def delete_all(cls):
@@ -290,10 +299,10 @@ class Summary(CMDR, db.Model):
 
     def as_public_dict(self):
         return {
-            'created': self.created,
+            'created': self.created.isoformat(),
             'summary_id': self.summary_id,
             'properties': self.properties,
-            'geometry': self.geometry,
+            'geometry': repr(self.geometry),
         }
 
     def __repr__(self):

@@ -146,6 +146,45 @@ class SpeciesTest(object):
         pass
 
     @nt.with_setup(setup, teardown)
-    def test_get_session(self):
+    def test_get_species(self):
         resp = assert_ok(200, self.client.get('/v1/species'))
+        nt.assert_equal(resp['count'], '1')
+
+
+class ObservationTest:
+
+    def setup(self):
+        self.client = BirdsEyeClient(app.test_client())
+        self.client.delete('/v1/sessions')
+        self.client.delete('/v1/observations')
+        self.client.delete('/v1/users')
+        self.client.delete('/v1/species')
+        self.client.post('/v1/users', {
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+        })
+        resp = assert_ok(201, self.client.post('/v1/observations', {
+            'credentials': {'email': 'joe@example.com'},
+            'secret': '12345',
+            'geometry': "POLYGON((-81.3 37.2, -80.63 38.04, -80.02 37.49, -81.3 37.2))",
+            'media': {},
+            'properties': {},
+        }))
+        nt.assert_equal(resp.get('count'), '1')
+        self.obs_id = resp.get('data')[0]
+
+    def teardown(self):
+        pass
+
+    @nt.with_setup(setup, teardown)
+    def test_get_observations(self):
+        resp = assert_ok(200, self.client.get('/v1/observations'))
+        nt.assert_equal(resp['count'], '1')
+
+    @nt.with_setup(setup, teardown)
+    def test_get_observation(self):
+        resp = assert_error(
+            404, self.client.get('/v1/observations/00000000-0000-0000-0000-000000000000'))
+        resp = assert_ok(200, self.client.get('/v1/observations/{}'.format(
+            self.obs_id)))
         nt.assert_equal(resp['count'], '1')
