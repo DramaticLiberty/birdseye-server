@@ -70,6 +70,7 @@ Setup a database:
 .. code:: bash
 
           brew install postgis
+          createuser -P birdseye # (password birdseye)
           createdb -E UTF8 -O $USER birdseye
           createlang plpgsql birdseye
           psql -d birdseye << EOT
