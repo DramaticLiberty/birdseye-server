@@ -161,7 +161,7 @@ class Media(Resource):
     def post(self):
         path = request.headers.get('X-File')
         if path is not None:
-            ext = 'jpg'
+            ext = 'jpeg'
             basename = '{}.{}'.format(bm.new_uuid(), ext)
             new_path = '/var/www/static/{}'.format(basename)
             os.rename(path, new_path)
