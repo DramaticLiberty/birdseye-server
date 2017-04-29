@@ -73,7 +73,7 @@ class Users(Resource):
         # TODO: check admin
         users = bm.User.find_all()
         return {'status': 'success', 'count': str(len(users)), 'data': [
-            u.as_public_dict for u in users]}
+            u.as_public_dict() for u in users]}
 
     def delete(self):
         # TODO: check admin

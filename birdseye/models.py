@@ -127,7 +127,7 @@ class User(CMDR, db.Model):
 
     @classmethod
     def find_all(cls):
-        return cls.query.order_by(cls.created)
+        return cls.query.order_by(cls.created).all()
 
     @classmethod
     def find_by_id(cls, user_id):

@@ -27,7 +27,10 @@ def reset_tables():
 @manager.command
 def test():
     '''Runs the tests.'''
-    print('\nNot yet implemented. Please use "birdseye-test" instead.\n')
+    print('\nStarting server tests.\n')
+    birdseye_test = ['birdseye-test', '--nocapture']
+    subprocess.call(birdseye_test)
+
 
 @manager.command
 def runproduction():

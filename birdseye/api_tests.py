@@ -83,6 +83,11 @@ class UserTest(object):
 
     @nt.with_setup(setup, teardown)
     def test_delete_all_users(self):
+        self.client.delete('/v1/users')
+        resp = assert_ok(200, self.client.get('/v1/users'))
+        nt.assert_equal(resp['count'], '0')
+        nt.assert_equal(resp['data'], [])
+
         resp = assert_ok(201, self.client.post('/v1/users', {
             'credentials': {'email': 'joe@example.com'},
             'secret': '12345',
