@@ -32,7 +32,7 @@ import types
 import birdseye
 from birdseye import app, db
 import birdseye.models as bm
-
+import os
 
 api = Api(app)
 representations.json.settings = {'indent': 4}
@@ -160,9 +160,15 @@ class Media(Resource):
 
     def post(self):
         path = request.headers.get('X-File')
-        path = path or 'not-found.jpg'
+        if path is not None:
+            ext = 'jpg'
+            basename = '{}.{}'.format(bm.new_uuid(), ext)
+            new_path = '/var/www/static/{}'.format(basename)
+            os.rename(path, new_path)
+        else:
+            basename = 'not-found.jpg'
         return dict(status='success', count='1', data=[
-            'https://birdseye.space/static/{}'.format(path)]), 200
+            'https://birdseye.space/static/{}'.format(basename)]), 200
 
 
 @api.route('/v1/species')
