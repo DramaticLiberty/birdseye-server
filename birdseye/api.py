@@ -29,6 +29,7 @@ Conventions
 from flask import request
 from flask_restful import Resource, Api, representations
 import types
+import birdseye
 from birdseye import app, db
 import birdseye.models as bm
 
@@ -48,6 +49,13 @@ api.route = types.MethodType(api_route, api)
 
 def not_found():
     return {'status': 'error', 'message': 'Found no matches'}, 404
+
+
+@api.route('/v1')
+class Root(Resource):
+
+    def get(self):
+        return {'status': 'success', 'version': birdseye.__version__}, 200
 
 
 @api.route('/v1/users')

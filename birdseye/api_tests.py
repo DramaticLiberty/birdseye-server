@@ -104,6 +104,11 @@ class SessionTest(object):
         pass
 
     @nt.with_setup(setup, teardown)
+    def test_get_root(self):
+        resp = assert_ok(200, self.client.get('/v1'))
+        nt.assert_is_not_none(resp['version'])
+
+    @nt.with_setup(setup, teardown)
     def test_get_session(self):
         resp = assert_ok(200, self.client.post('/v1/sessions', {
             'credentials': {'email': 'joe@example.com'},
