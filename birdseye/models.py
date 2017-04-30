@@ -239,7 +239,7 @@ class Observation(CMDR, db.Model):
     species = relationship('Species')
 
     def __init__(self, user, geometry, media, properties=None, species=None):
-        self.user_id = user.user_id
+        self.user_id = user.user_id if user is not None else None
         self.user = user
         self.geometry = geometry
         self.media = media
