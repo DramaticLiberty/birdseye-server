@@ -81,7 +81,7 @@ def make_poly(lat, lon, radius):
     return 'POLYGON(({}))'.format(poly_geo)
 
 
-@rq.job
+@rq.job('birdseye')
 def image_to_observation(file_path, image_url):
     geom = make_poly(detect_exif_gps(file_path), 0.000001)
     media = {'url': image_url}
