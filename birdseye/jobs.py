@@ -10,8 +10,10 @@ from google.cloud import vision
 from google.cloud.vision.feature import Feature
 from google.cloud.vision.feature import FeatureTypes
 import piexif
+import time
 
 from birdseye import rq
+import birdseye.job_chmod
 import birdseye.models as bm
 from birdseye.default_settings import SQLALCHEMY_DATABASE_URI
 import birdseye.pubsub as ps
@@ -83,6 +85,11 @@ def make_poly(lat, lon, radius):
 
 @rq.job
 def image_to_observation(file_path, image_url):
+    job = rq.get_queue('chmods').enqueue(
+        birdseye.job_chmod.chmod_file, file_path)
+    while not job.result:
+        time.sleep(1)
+
     geom = None
     media = {'url': image_url}
     properties = {}
