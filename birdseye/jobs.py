@@ -4,7 +4,6 @@ Jobs of all sizes
 -----------------
 
 '''
-from flask_rq2 import RQ
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from google.cloud import vision
@@ -12,9 +11,9 @@ from google.cloud.vision.feature import Feature
 from google.cloud.vision.feature import FeatureTypes
 import piexif
 
+from birdseye import rq
 import birdseye.models as bm
 from birdseye.default_settings import SQLALCHEMY_DATABASE_URI
-rq = RQ()
 
 
 def db_session():
@@ -81,7 +80,7 @@ def make_poly(lat, lon, radius):
     return 'POLYGON(({}))'.format(poly_geo)
 
 
-@rq.job('birdseye')
+@rq.job
 def image_to_observation(file_path, image_url):
     geom = make_poly(detect_exif_gps(file_path), 0.000001)
     media = {'url': image_url}
