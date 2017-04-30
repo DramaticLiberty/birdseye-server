@@ -32,3 +32,10 @@ class ImageToObservationTest(object):
 
         gps = jobs.detect_exif_gps(self.file_path)
         nt.assert_is_none(gps)
+
+    @nt.with_setup(setup, teardown)
+    def test_conver_poly(self):
+        gps = jobs.detect_exif_gps('test-data/exif-img-gps.jpg')
+        gps_poly = jobs.make_poly(gps[0], gps[1], 0.00001)
+        nt.assert_is_not_none(gps_poly)
+        nt.assert_true(gps_poly.startswith('POLYGON('))

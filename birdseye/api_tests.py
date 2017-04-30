@@ -163,10 +163,11 @@ class ObservationTest:
             'credentials': {'email': 'joe@example.com'},
             'secret': '12345',
         })
+        geometry = 'POLYGON((-81.3 37.2, -80.63 38.04, -80.02 37.49, -81.3 37.2))'  # noqa
         resp = assert_ok(201, self.client.post('/v1/observations', {
             'credentials': {'email': 'joe@example.com'},
             'secret': '12345',
-            'geometry': "POLYGON((-81.3 37.2, -80.63 38.04, -80.02 37.49, -81.3 37.2))",
+            'geometry': geometry,
             'media': {},
             'properties': {},
         }))
@@ -183,8 +184,8 @@ class ObservationTest:
 
     @nt.with_setup(setup, teardown)
     def test_get_observation(self):
-        resp = assert_error(
-            404, self.client.get('/v1/observations/00000000-0000-0000-0000-000000000000'))
+        resp = assert_error(404, self.client.get(
+            '/v1/observations/00000000-0000-0000-0000-000000000000'))
         resp = assert_ok(200, self.client.get('/v1/observations/{}'.format(
             self.obs_id)))
         nt.assert_equal(resp['count'], '1')

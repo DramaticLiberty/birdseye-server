@@ -73,9 +73,17 @@ def detect_exif_gps(file_path):
     return [lat, lon]
 
 
+def make_poly(lat, lon, radius):
+    poly = [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -1.0)]
+    poly_geo = ', '.join(
+        '{} {}'.format(lat + latm * radius, lon + lonm * radius)
+        for latm, lonm in poly)
+    return 'POLYGON(({}))'.format(poly_geo)
+
+
 @rq.job
 def image_to_observation(file_path, image_url):
-    geom = detect_exif_gps(file_path)
+    geom = make_poly(detect_exif_gps(file_path), 0.000001)
     media = {'url': image_url}
     properties = {'vision_labels': detect_labels(image_url)}
 
