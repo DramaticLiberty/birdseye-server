@@ -4,6 +4,7 @@ Project Birdseye server source package. Requires gevent greenlet patch.
 '''
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_rq2 import RQ
 import logging.config
 import sys
 
@@ -34,6 +35,7 @@ else:
     app.logger.setLevel('INFO')
 
 db = SQLAlchemy(app)
+rq = RQ(app)
 
 import birdseye.api  # noqa
 birdseye.api.noqa()

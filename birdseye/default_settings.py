@@ -4,6 +4,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_DATABASE_URI = str(os.getenv(
     'SQLALCHEMY_DATABASE_URI',
     'postgresql://birdseye:birdseye@localhost/birdseye'))
+RQ_SCHEDULER_INTERVAL = 60
 
 LOGGER = {
     'version': 1,

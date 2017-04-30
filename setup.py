@@ -45,7 +45,9 @@ requirements = ['Baker',
                 'Flask-Migrate',
                 'Flask-RESTful',
                 'Flask-Script',
-                'google-cloud-vision']
+                'google-cloud-vision',
+                'piexif',
+                'Flask-RQ2']
 
 README = os.path.join(HERE, "README.rst")
 description = "".join(open(README).readlines()[4:])

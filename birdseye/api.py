@@ -31,6 +31,7 @@ from flask_restful import Resource, Api, representations
 import types
 import birdseye
 from birdseye import app, db
+from birdseye.jobs import image_to_observation
 import birdseye.models as bm
 import os
 
@@ -193,15 +194,16 @@ class Media(Resource):
 
     def post(self):
         path = request.headers.get('X-File')
+        url_base = 'https://birdseye.space/static/'
+        url = url_base + 'not-found.jpg'
         if path is not None:
             ext = 'jpeg'
             basename = '{}.{}'.format(bm.new_uuid(), ext)
             new_path = '/var/www/html/static/{}'.format(basename)
             os.rename(path, new_path)
-        else:
-            basename = 'not-found.jpg'
-        return _success_item('https://birdseye.space/static/{}'.format(
-            basename))
+            url = url_base + basename
+            image_to_observation.queue(new_path, url)
+        return _success_item(url)
 
 
 @api.route('/v1/species')
