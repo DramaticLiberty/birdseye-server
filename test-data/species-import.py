@@ -29,11 +29,10 @@ def main(filename):
             'fauna'],
         'turtles (non-marine)': [
             'turtle', 'animal', 'non-marine', 'cold blood', 'cold bloded',
-            'vertebrate', 'fauna'
-        ],
+            'vertebrate', 'fauna'],
         'butterflies': [
             'butterfly', 'animal', 'insect', 'moths and butterflies', 'fauna',
-            'invertebrate', ''],
+            'invertebrate'],
         'dragonflies': [
             'dragonfly', 'animal', 'insect', 'dragonflies and damseflies',
             'invertebrate', 'fauna'],
