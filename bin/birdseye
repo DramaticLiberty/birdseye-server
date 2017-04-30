@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import gevent.monkey; gevent.monkey.patch_all()
 
-import sys
 import platform
 from gevent import subprocess
 from flask_script import Manager
@@ -18,13 +17,14 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 manager.add_command('rq', RQManager(rq))
 
+
 @manager.command
 def reset_tables():
     '''Creates database tables from our models, destroys existing data in
     the process.'''
-    import birdseye.models
     db.drop_all()
     db.create_all()
+
 
 @manager.command
 def test():
@@ -41,11 +41,11 @@ def runproduction():
         'gunicorn',
         '-w', '2',
         '-k', 'gevent',
-        '--worker-connections', '1000', # This is the default
+        '--worker-connections', '1000',  # This is the default
         '--preload',
-        '--timeout', '0', # we are using async workers
+        '--timeout', '0',  # we are using async workers
         # for which timeout does not make sense
-        '--keep-alive', '5', # default is 2
+        '--keep-alive', '5',  # default is 2
         '--bind', 'unix:/tmp/birdseye_gunicorn.sock',
         '-p', '{}.pid'.format(platform.node()),
         'birdseye:app']
