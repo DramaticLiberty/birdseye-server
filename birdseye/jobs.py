@@ -91,11 +91,13 @@ def image_to_observation(file_path, image_url):
             raise ValueError('Image does not have GPS Exif')
         geom = make_poly(latlon[0], latlon[1], 0.000001)
     except:
-        pass
+        print('Failed to detect GPS in image EXIF.')
+
     try:
-        properties = {'vision_labels': detect_labels(image_url)}
+        labels = [l for s, l in detect_labels(image_url) if s > 0.5]
+        properties = {'vision_labels': labels}
     except:
-        pass
+        print('Failed to detect labels.')
 
     session = db_session()
     obs = bm.Observation(None, geom, media, properties)
