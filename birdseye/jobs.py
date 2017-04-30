@@ -14,6 +14,7 @@ import piexif
 from birdseye import rq
 import birdseye.models as bm
 from birdseye.default_settings import SQLALCHEMY_DATABASE_URI
+import birdseye.pubsub as ps
 
 
 def db_session():
@@ -104,3 +105,6 @@ def image_to_observation(file_path, image_url):
     session.add(obs)
     session.commit()
     session.refresh(obs)
+
+    pubsub = ps.PubSub()
+    pubsub.publish(obs.as_public_dict())
