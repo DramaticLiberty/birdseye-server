@@ -132,7 +132,8 @@ class User(CMDR, db.Model):
 
     @classmethod
     def find_by_id(cls, user_id):
-        return cls.query.filter(cls.user_id == user_id).order_by(cls.created)
+        query = cls.query.filter(cls.user_id == str(user_id))
+        return query.order_by(cls.created).first()
 
     @classmethod
     def find_by_credentials(cls, credentials, secrets):
@@ -140,7 +141,7 @@ class User(CMDR, db.Model):
             text('credentials = :credentials and secrets = :secrets'))
         query = query.params(
             credentials=PGJson(credentials), secrets=secrets)
-        return query.order_by(cls.created)
+        return query.order_by(cls.created).first()
 
 
 class Session(CMDR, db.Model):
@@ -181,12 +182,12 @@ class Session(CMDR, db.Model):
     @classmethod
     def delete(cls, session_id):
         return cls.query.filter(
-            cls.session_id == session_id).delete()
+            cls.session_id == str(session_id)).delete()
 
     @classmethod
     def find_by_id(cls, session_id):
-        return cls.query.filter(
-            cls.session_id == session_id).order_by(cls.created)
+        query = cls.query.filter(cls.session_id == str(session_id))
+        return query.order_by(cls.created).first()
 
 
 class Species(CMDR, db.Model):
@@ -266,8 +267,8 @@ class Observation(CMDR, db.Model):
 
     @classmethod
     def find_by_id(cls, observation_id):
-        return cls.query.filter(cls.observation_id == observation_id).order_by(
-            cls.created)
+        query = cls.query.filter(cls.observation_id == str(observation_id))
+        return query.order_by(cls.created).first()
 
     @classmethod
     def delete_all(cls):

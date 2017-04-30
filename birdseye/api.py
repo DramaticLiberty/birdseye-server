@@ -103,7 +103,7 @@ class User(Resource):
 
     def get(self, user_id):
         # TODO: check session
-        user = bm.User.find_by_id(str(user_id)).first()
+        user = bm.User.find_by_id(user_id)
         return _success_item(user.as_public_dict())
 
 
@@ -113,7 +113,7 @@ class Sessions(Resource):
     def post(self):
         data = request.get_json()
         user = bm.User.find_by_credentials(
-            data['credentials'], data['secret']).first()
+            data['credentials'], data['secret'])
         if user is None:
             return _error(message='No user.', status_code=403)
         ses = bm.Session(user, data.get('tokens'))
@@ -134,12 +134,12 @@ class Session(Resource):
 
     def get(self, session_id):
         # TODO: check session
-        session = bm.Session.find_by_id(str(session_id)).first()
+        session = bm.Session.find_by_id(session_id)
         return _success_item(session.as_public_dict())
 
     def delete(self, session_id):
         # TODO: check session
-        count = bm.Session.delete(str(session_id))
+        count = bm.Session.delete(session_id)
         db.session.commit()
         return _success_item(count)
 
@@ -156,7 +156,7 @@ class Observations(Resource):
     def post(self):
         data = request.get_json()
         user = bm.User.find_by_credentials(
-            data.get('credentials'), data.get('secret')).first()
+            data.get('credentials'), data.get('secret'))
         if user is None:
             return _error('No user.', 403)
         obs = bm.Observation(user, data.get('geometry'), data.get('media'),
@@ -178,7 +178,7 @@ class Observation(Resource):
 
     def get(self, observation_id):
         # TODO: check_session
-        observation = bm.Observation.find_by_id(str(observation_id)).first()
+        observation = bm.Observation.find_by_id(observation_id)
         if observation:
             return _success_item(observation.as_public_dict())
         else:
