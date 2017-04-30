@@ -255,7 +255,7 @@ class Observation(CMDR, db.Model):
             'media': self.media,
             'properties': self.properties,
             'species': self.species.as_public_dict() if self.species else None,
-            'author': self.user.social,
+            'author': self.user.social if self.user is not None else 'Unknown',
         }
 
     def __repr__(self):
