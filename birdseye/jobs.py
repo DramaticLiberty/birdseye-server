@@ -82,9 +82,20 @@ def make_poly(lat, lon, radius):
 
 @rq.job
 def image_to_observation(file_path, image_url):
-    geom = make_poly(detect_exif_gps(file_path), 0.000001)
+    geom = None
     media = {'url': image_url}
-    properties = {'vision_labels': detect_labels(image_url)}
+    properties = {}
+    try:
+        latlon = detect_exif_gps(file_path)
+        if latlon is None:
+            raise ValueError('Image does not have GPS Exif')
+        geom = make_poly(latlon[0], latlon[1], 0.000001)
+    except:
+        pass
+    try:
+        properties = {'vision_labels': detect_labels(image_url)}
+    except:
+        pass
 
     session = db_session()
     obs = bm.Observation(None, geom, media, properties)
