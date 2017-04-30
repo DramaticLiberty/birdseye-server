@@ -73,7 +73,7 @@ def detect_exif_gps(file_path):
 
 
 def make_poly(lat, lon, radius):
-    poly = [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -1.0)]
+    poly = [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)]
     poly_geo = ', '.join(
         '{} {}'.format(lat + latm * radius, lon + lonm * radius)
         for latm, lonm in poly)
