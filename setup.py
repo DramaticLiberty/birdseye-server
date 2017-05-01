@@ -3,8 +3,8 @@
 Setup script for birdseye.
 
 USAGE:
-    python setup.py install
-    python setup.py nosetests
+    pip install -e .
+    birdseye test
 """
 
 import sys
@@ -52,7 +52,7 @@ requirements = ['Baker',
 
 README = os.path.join(HERE, "README.rst")
 description = "".join(open(README).readlines()[4:])
-PROVIDES = ['birdseye']
+PROVIDES = ['birdseye', 'birdseye_jobs']
 
 
 # -----------------------------------------------------------------------------
