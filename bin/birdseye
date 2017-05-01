@@ -59,10 +59,9 @@ def nginx_upload_chmod_hack():
     '''Nginx leaves uploaded files with chmod 600, so we run this worker as
     www-data user and chmod those files to g+r so that the backend can read
     them'''
-    print('\nStarting NGINX upload chmod hack.')
-    project_root = os.path.dirname(os.path.dirname(__file__) or os.curdir)
-    os.chdir(project_root)
-    subprocess.call(['sudo', '-u', 'www-data', 'rqworker', 'www-data-chmod'])
+    print('\nStart NGINX upload chmod hack by issuing:')
+    hack = ['sudo', '-u', 'www-data', 'rqworker', 'www-data-chmod']
+    print(' $ {}\n'.format(' '.join(hack)))
 
 
 if __name__ == '__main__':
