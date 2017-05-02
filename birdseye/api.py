@@ -28,12 +28,14 @@ Conventions
 '''
 from flask import request
 from flask_restful import Resource, Api, representations
+import os
 import types
+
 import birdseye
-from birdseye import app, db
+from birdseye import app, db, rq
+import birdseye_jobs.chmod
 from birdseye.jobs import image_to_observation
 import birdseye.models as bm
-import os
 
 api = Api(app)
 representations.json.settings = {'indent': 4}
@@ -222,7 +224,10 @@ class Media(Resource):
             new_path = '/var/www/html/static/{}'.format(basename)
             os.rename(path, new_path)
             url = url_base + basename
-            image_to_observation.queue(new_path, url)
+
+            chmod_job = rq.get_queue('www-data-chmod').enqueue(
+                birdseye_jobs.chmod.chmod_file, new_path)
+            image_to_observation.queue(new_path, url, depends_on=chmod_job)
         return _success_item(url)
 
 
