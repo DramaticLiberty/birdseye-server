@@ -1,10 +1,11 @@
 import os
-DEBUG = (os.getenv('DEBUG', 1) == 1)
+DEBUG = (os.getenv('DEBUG', 0) == 1)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_DATABASE_URI = str(os.getenv(
     'SQLALCHEMY_DATABASE_URI',
     'postgresql://birdseye:birdseye@localhost/birdseye'))
 RQ_SCHEDULER_INTERVAL = 60
+RQ_ASYNC = DEBUG == 1
 
 LOGGER = {
     'version': 1,

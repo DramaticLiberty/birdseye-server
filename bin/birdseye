@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import gevent.monkey; gevent.monkey.patch_all()
 
-import platform
+import os, platform
 from gevent import subprocess
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
@@ -30,8 +30,10 @@ def reset_tables():
 def test():
     '''Runs the tests.'''
     print('\nStarting server tests.\n')
+    test_env = os.environ.copy()
+    test_env['DEBUG'] = '1'
     birdseye_test = ['birdseye-test', '--nocapture']
-    subprocess.call(birdseye_test)
+    subprocess.call(birdseye_test, env=test_env)
 
 
 @manager.command
