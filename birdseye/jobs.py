@@ -95,7 +95,7 @@ def image_to_observation(file_path, image_url):
         print('Failed to detect GPS in image EXIF.')
 
     try:
-        labels = [l for s, l in detect_labels(image_url) if s > 0.5]
+        labels = [[s, l] for s, l in detect_labels(image_url) if s > 0.55]
         properties = {'vision_labels': labels}
     except:
         print('Failed to detect labels.')
