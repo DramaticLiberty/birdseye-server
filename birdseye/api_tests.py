@@ -169,7 +169,7 @@ class ObservationTest:
             'secret': '12345',
             'geometry': geometry,
             'media': {},
-            'properties': {},
+            'properties': {'vision_labels': [(0.99, 'bird'), (0.95, 'blue')]},
         }))
         nt.assert_equal(resp.get('count'), '1')
         self.obs_id = resp.get('data')[0]
@@ -179,7 +179,16 @@ class ObservationTest:
 
     @nt.with_setup(setup, teardown)
     def test_get_observations(self):
-        resp = assert_ok(200, self.client.get('/v1/observations'))
+        resp = assert_ok(200, self.client.get('/v1/mapped_observations'))
+        nt.assert_equal(resp['count'], '1')
+        nt.assert_equal(len(resp['data']), 1)
+        nt.assert_equal(
+            sorted(resp['data'][0].keys()),
+            ['coordinates', 'created', 'id', 'subtitle', 'title', 'type'])
+
+    @nt.with_setup(setup, teardown)
+    def test_get_mapped_observations(self):
+        resp = assert_ok(200, self.client.get('/v1/mapped_observations'))
         nt.assert_equal(resp['count'], '1')
 
     @nt.with_setup(setup, teardown)

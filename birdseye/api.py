@@ -174,6 +174,26 @@ class Observations(Resource):
         return _success_item(count)
 
 
+@api.route('/v1/mapped_observations')
+class MappedObservations(Resource):
+
+    def _remap(self, record):
+        return {
+            'id': record.observation_id,
+            'created': record.created.isoformat(),
+            'title': ', '.join([
+                label for _, label in record.properties['vision_labels'][:3]]),
+            'subtitle': '',
+            'coordinates': [record.geox, record.geoy],
+            'type': 'point',
+        }
+
+    def get(self):
+        rows = bm.Observation.find_all_mapped(db.session)
+        return _success_data(count=len(rows), data=[
+            self._remap(record) for record in rows])
+
+
 @api.route('/v1/observations/<uuid:observation_id>')
 class Observation(Resource):
 

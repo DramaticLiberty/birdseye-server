@@ -275,6 +275,16 @@ class Observation(CMDR, db.Model):
         result = cls.query.delete()
         return result
 
+    @classmethod
+    def find_all_mapped(cls, session):
+        return session.query(
+            cls.observation_id,
+            cls.created,
+            cls.geometry.ST_Centroid().ST_X().label('geox'),
+            cls.geometry.ST_Centroid().ST_Y().label('geoy'),
+            cls.properties
+        ).order_by(cls.created).all()
+
 
 observation_summary = Table(
     'observation_summary', db.Model.metadata,
