@@ -28,12 +28,14 @@ Conventions
 '''
 from flask import request
 from flask_restful import Resource, Api, representations
+import os
 import types
+
 import birdseye
-from birdseye import app, db
+from birdseye import app, db, rq
+import birdseye_jobs.chmod
 from birdseye.jobs import image_to_observation
 import birdseye.models as bm
-import os
 
 api = Api(app)
 representations.json.settings = {'indent': 4}
@@ -174,6 +176,26 @@ class Observations(Resource):
         return _success_item(count)
 
 
+@api.route('/v1/mapped_observations')
+class MappedObservations(Resource):
+
+    def _remap(self, record):
+        return {
+            'id': record.observation_id,
+            'created': record.created.isoformat(),
+            'title': ', '.join([
+                label for _, label in record.properties['vision_labels'][:3]]),
+            'subtitle': '',
+            'coordinates': [record.geox, record.geoy],
+            'type': 'point',
+        }
+
+    def get(self):
+        rows = bm.Observation.find_all_mapped(db.session)
+        return _success_data(count=len(rows), data=[
+            self._remap(record) for record in rows])
+
+
 @api.route('/v1/observations/<uuid:observation_id>')
 class Observation(Resource):
 
@@ -202,7 +224,10 @@ class Media(Resource):
             new_path = '/var/www/html/static/{}'.format(basename)
             os.rename(path, new_path)
             url = url_base + basename
-            image_to_observation.queue(new_path, url)
+
+            chmod_job = rq.get_queue('www-data-chmod').enqueue(
+                birdseye_jobs.chmod.chmod_file, new_path)
+            image_to_observation.queue(new_path, url, depends_on=chmod_job)
         return _success_item(url)
 
 

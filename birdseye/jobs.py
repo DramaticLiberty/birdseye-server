@@ -10,9 +10,7 @@ from google.cloud import vision
 from google.cloud.vision.feature import Feature
 from google.cloud.vision.feature import FeatureTypes
 import piexif
-import time
 
-import birdseye_jobs.chmod
 from birdseye import rq
 import birdseye.models as bm
 from birdseye.default_settings import SQLALCHEMY_DATABASE_URI
@@ -102,18 +100,13 @@ def make_point(lat, lon):
 
 @rq.job
 def image_to_observation(file_path, image_url):
-    job = rq.get_queue('www-data-chmod').enqueue(
-        birdseye_jobs.chmod.chmod_file, file_path)
-    while not job.result:
-        time.sleep(1)
-
     geom = None
     media = {'url': image_url}
     properties = {}
     try:
         lat, lon = detect_exif_gps(file_path)
-        geom = make_point(lat, lon)
-        labels = [l for s, l in detect_labels(image_url) if s > 0.5]
+        geom = make_polylat, lon, 0.000001)
+        labels = [[s, l] for s, l in detect_labels(image_url) if s > 0.55]
         properties = {'vision_labels': labels}
     except Exception as e:
         print(e)
