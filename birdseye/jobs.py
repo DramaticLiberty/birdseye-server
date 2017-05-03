@@ -39,6 +39,11 @@ def gcv_params(filename_or_url):
     return img_args, detect_args
 
 
+class NoLabelsDetected(ValueError):
+    def __init__(self):
+        super().__init__('Failed to detect labels.')
+
+
 def detect_labels(filename_or_url):
     gcv = vision.Client()
     img_args, detect_args = gcv_params(filename_or_url)
@@ -55,22 +60,30 @@ def dms_as_float(arc, negative):
         for i, dms in enumerate([1.0, 60.0, 3600.0]))
 
 
+IFD = 'GPS'
+GPS_Required = [
+    'GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']
+
+
+class NoGPSData(ValueError):
+    def __init__(self):
+        super().__init__('Image does not have GPS Exif data')
+
+
 def detect_exif_gps(file_path):
     exif_dict = piexif.load(file_path)
-    ifd = 'GPS'
-    if ifd not in exif_dict.keys():
-        return None
-    gps = {piexif.TAGS[ifd][tag]['name']: val
-           for tag, val in exif_dict[ifd].items()}
-    required = [
-        'GPSLatitudeRef', 'GPSLatitude', 'GPSLongitudeRef', 'GPSLongitude']
-    if any(gps.get(tag) is None for tag in required):
-        return None
-    lat = dms_as_float(
-        gps['GPSLatitude'], gps['GPSLatitudeRef'] != 'N')
-    lon = dms_as_float(
-        gps['GPSLongitude'], gps['GPSLongitudeRef'] != 'E')
-    return [lat, lon]
+    if IFD not in exif_dict.keys():
+        raise NoGPSData()
+    gps = {piexif.TAGS[IFD][tag]['name']: val
+           for tag, val in exif_dict[IFD].items()}
+    try:
+        lat = dms_as_float(
+            gps['GPSLatitude'], gps['GPSLatitudeRef'] != 'N')
+        lon = dms_as_float(
+            gps['GPSLongitude'], gps['GPSLongitudeRef'] != 'E')
+    except KeyError:
+        raise NoGPSData()
+    return lat, lon
 
 
 def make_poly(lat, lon, radius):
@@ -81,30 +94,28 @@ def make_poly(lat, lon, radius):
     return 'POLYGON(({}))'.format(poly_geo)
 
 
+def make_point(lat, lon):
+    return 'POINT({lat} {long})'.format(lat=lat, lon=lon)
+
+
 @rq.job
 def image_to_observation(file_path, image_url):
     geom = None
     media = {'url': image_url}
     properties = {}
     try:
-        latlon = detect_exif_gps(file_path)
-        if latlon is None:
-            raise ValueError('Image does not have GPS Exif')
-        geom = make_poly(latlon[0], latlon[1], 0.000001)
-    except:
-        print('Failed to detect GPS in image EXIF.')
-
-    try:
+        lat, lon = detect_exif_gps(file_path)
+        geom = make_polylat, lon, 0.000001)
         labels = [[s, l] for s, l in detect_labels(image_url) if s > 0.55]
         properties = {'vision_labels': labels}
-    except:
-        print('Failed to detect labels.')
-
+    except Exception as e:
+        print(e)
+    # add observation to database
     session = db_session()
     obs = bm.Observation(None, geom, media, properties)
     session.add(obs)
     session.commit()
     session.refresh(obs)
-
+    # publish observation to pub-sub channels
     pubsub = ps.PubSub()
     pubsub.publish(obs.as_public_dict())

@@ -25,7 +25,7 @@ class DatetimeIS8601JSONEncoder(flask.json.JSONEncoder):
 
     def __init__(self, **kwargs):
         kwargs['ensure_ascii'] = False
-        super(DatetimeIS8601JSONEncoder, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def default(self, obj):
         if isinstance(obj, datetime):
@@ -40,7 +40,7 @@ class DatetimeIS8601JSONEncoder(flask.json.JSONEncoder):
 class TimedeltaJSONDecoder(flask.json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         self.hook = kwargs.pop("object_hook", None)
-        super(TimedeltaJSONDecoder, self).__init__(
+        super().__init__(
             *args, object_hook=self.obj_hook, **kwargs)
 
     def obj_hook(self, d):
