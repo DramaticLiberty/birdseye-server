@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import Text, text, ForeignKey, Table, Column
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geometry
+from geoalchemy2.shape import to_shape
 
 from birdseye import db
 
@@ -248,13 +249,25 @@ class Observation(CMDR, db.Model):
         self.species = species
 
     def as_public_dict(self):
+        import ipdb;ipdb.set_trace()
         return {
             'created': self.created.isoformat(),
             'observation_id': self.observation_id,
-            'geometry': repr(self.geometry),
+            'geometry': self.geometry.data,
             'media': self.media,
             'properties': self.properties,
-            'species': self.species.as_public_dict() if self.species else None,
+            'species': self.species.as_public_dict() if self.species else 'Unknwon',
+            'author': self.user.social if self.user is not None else 'Unknown',
+        }
+
+    def as_map_pin(self):
+        loc = to_shape(self.geometry).centroid
+        return {
+            'created': self.created.isoformat(),
+            'coordinates': [loc.x, loc.y],
+            'media_url': self.media.get('url'),
+            'labels': self.properties.get('vision_labels'),
+            'species': self.species.as_public_dict() if self.species else 'Unknown',
             'author': self.user.social if self.user is not None else 'Unknown',
         }
 

@@ -48,7 +48,8 @@ requirements = ['Baker',
                 'google-cloud-vision',
                 'piexif',
                 'Flask-RQ2',
-                'pubnub']
+                'pubnub',
+                'shapely']
 
 README = os.path.join(HERE, "README.rst")
 description = "".join(open(README).readlines()[4:])
