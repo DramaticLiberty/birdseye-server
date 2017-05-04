@@ -105,7 +105,7 @@ def image_to_observation(file_path, image_url):
     properties = {}
     try:
         lat, lon = detect_exif_gps(file_path)
-        geom = make_polylat, lon, 0.000001)
+        geom = make_poly(lat, lon, 0.000001)
         labels = [[s, l] for s, l in detect_labels(image_url) if s > 0.55]
         properties = {'vision_labels': labels}
     except Exception as e:
