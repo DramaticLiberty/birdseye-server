@@ -48,7 +48,7 @@ def detect_labels(filename_or_url):
     gcv = vision.Client()
     img_args, detect_args = gcv_params(filename_or_url)
     g = gcv.image(**img_args).detect(**detect_args)
-    # TODO Raise exception on unsafe media
+    # TODO Raise exception on NSFW/unsafe media
     return [(vl.score, vl.description) for go in g for vl in go.labels]
 
 

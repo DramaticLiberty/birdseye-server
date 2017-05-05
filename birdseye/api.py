@@ -180,18 +180,29 @@ class Observations(Resource):
 class MappedObservations(Resource):
 
     def _remap(self, record):
+        title = ', '.join([
+            label for _, label in record.properties['vision_labels'][:3]])
+        author = 'Yo boss! Whazzuuupp!'
+        if record.user_id is not None:
+            # I'm not happy with this approach!
+            user = bm.User.find_by_id(record.user_id)
+            if user:
+                author = user.social
         return {
             'id': record.observation_id,
+            'type': 'Feature',
             'created': record.created.isoformat(),
-            'title': ', '.join([
-                label for _, label in record.properties['vision_labels'][:3]]),
-            'subtitle': '',
-            'coordinates': [record.geox, record.geoy],
-            'type': 'point',
+            'properties': {
+                'title': title,
+                'place': title,
+                'login': author,
+                'vision_labels': record.properties['vision_labels']
+            },
+            'geometry': record.geometry
         }
 
     def get(self):
-        rows = bm.Observation.find_all_mapped(db.session)
+        rows = bm.Observation.find_all_mapped()
         return _success_data(count=len(rows), data=[
             self._remap(record) for record in rows])
 
