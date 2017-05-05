@@ -51,8 +51,7 @@ class Singleton(type):
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
-            cls._instances[cls] = super(
-                Singleton, cls).__call__(*args, **kwargs)
+            cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
@@ -92,7 +91,6 @@ class ObservationsListener(SubscribeListener):
                 session.add(obs)
                 session.commit()
                 session.refresh(obs)
-                log.debug("Observation added")
             except Exception as e:
                 log.exception(e)
         else:
@@ -112,13 +110,18 @@ class PubSub(object, metaclass=Singleton):
 
     @staticmethod
     def _read_pubnub_config(conffile):
-        with open(os.path.expanduser(conffile)) as cf:
-            return json.load(cf)
+        if isinstance(conffile, str):
+            with open(os.path.expanduser(conffile)) as cf:
+                return json.load(cf)
+        else:
+            return json.load(conffile)
 
     def __init__(self, conffile=CONFIG):
         conf = self._read_pubnub_config(conffile)
         self.pnconfig = PNConfiguration()
         self.pnconfig.subscribe_key = conf.get("subscribe_key")
+        if self.pnconfig.subscribe_key is None:
+            raise PubSubError("subscribe key is not configured")
         self.pnconfig.publish_key = conf.get("publish_key")
         self.pnconfig.ssl = conf.get("ssl", False)
         rp = PubSub.RECONNECT_POLICY.get("reconnect_policy")
@@ -139,25 +142,28 @@ class PubSub(object, metaclass=Singleton):
             p.channels(ch)
         if chg:
             p.channels(chg)
-        p.execute()
+        return p.execute()
 
     def unsubscribe_all(self):
         self.pubnub.unsubscribe_all()
 
     def publish(self, data, meta=None, channel=None):
         # TODO: throttle or queue up messages
-        ch = channel or self._publish_chan
         if self.pnconfig.publish_key:
-            p = self.pubnub.publish().channel(ch)
-            p.message(data)
-            if meta:
-                p.meta(meta)
-            envelope = p.sync()
-            if envelope.status.is_error():
-                log.error("Error publishing to {}: {}".format(
-                    channel, envelope.status.error))
+            ch = channel or self._publish_chan
+            if ch:
+                p = self.pubnub.publish().channel(ch)
+                p.message(data)
+                if meta:
+                    p.meta(meta)
+                envelope = p.sync()
+                if envelope.status.is_error():
+                    raise PubSubError("Error publishing to {}: {}".format(
+                        ch, envelope.status.error))
+            else:
+                raise PubSubError("need publish channel")
         else:
-            raise PubSubError("publish key is not set")
+            raise PubSubError("publish key is not configured")
 
 
 if __name__ == "__main__":
