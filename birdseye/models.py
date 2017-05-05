@@ -262,25 +262,12 @@ class Observation(CMDR, db.Model):
         return '<Observation %r>' % self.observation_id
 
     @classmethod
-    def _query(cls):
-        session = cls.query.session
-        return session.query(
-            cls.created,
-            cls.observation_id,
-            cls.geometry.ST_Centroid().ST_AsGeoJSON().label('geometry'),
-            cls.properties,
-            cls.user,
-            cls.media,
-            
-        )        
-
-    @classmethod
     def find_all(cls):
-        return cls._query().order_by(cls.created).all()
+        return cls.query.order_by(cls.created).all()
 
     @classmethod
     def find_by_id(cls, observation_id):
-        query = cls._query().filter(cls.observation_id == str(observation_id))
+        query = cls.query.filter(cls.observation_id == str(observation_id))
         return query.order_by(cls.created).first()
 
     @classmethod
@@ -288,6 +275,18 @@ class Observation(CMDR, db.Model):
         result = cls.query.delete()
         return result
 
+    @classmethod
+    def find_all_mapped(cls):
+        session = cls.query.session
+        return session.query(
+            cls.created,
+            cls.observation_id,
+            cls.user,
+            cls.geometry.ST_Centroid().ST_AsGeoJSON().label('geometry'),
+            cls.media,
+            cls.properties,
+            cls.species,
+        ).order_by(cls.created).all()
 
 
 observation_summary = Table(

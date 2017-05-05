@@ -182,7 +182,7 @@ class MappedObservations(Resource):
     def _remap(self, record):
         title = ', '.join([
             label for _, label in record.properties['vision_labels'][:3]])
-        import ipdb; ipdb.set_trace()
+        author = record.user.social if record.user is not None else 'Yo boss!'
         return {
             'id': record.observation_id,
             'type': 'Feature',
@@ -190,16 +190,13 @@ class MappedObservations(Resource):
             'properties': {
                 'title': title,
                 'place': title,
-                'login': 'Yo boss, whazzuuup!',
+                'login': author,
             },
-            'geometry': {
-                'type': 'Point',
-                'coordinates': [record.geox, record.geoy],
-            }
+            'geometry': record.geometry
         }
 
     def get(self):
-        rows = bm.Observation.find_all_mapped(db.session)
+        rows = bm.Observation.find_all_mapped()
         return _success_data(count=len(rows), data=[
             self._remap(record) for record in rows])
 
