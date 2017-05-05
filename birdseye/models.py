@@ -278,15 +278,16 @@ class Observation(CMDR, db.Model):
     @classmethod
     def find_all_mapped(cls):
         session = cls.query.session
-        return session.query(
+        query = session.query(
             cls.created,
             cls.observation_id,
-            cls.user,
+            cls.user_id,
             cls.geometry.ST_Centroid().ST_AsGeoJSON().label('geometry'),
             cls.media,
             cls.properties,
-            cls.species,
-        ).order_by(cls.created).all()
+            cls.species_id,
+        )
+        return query.order_by(cls.created).all()
 
 
 observation_summary = Table(
