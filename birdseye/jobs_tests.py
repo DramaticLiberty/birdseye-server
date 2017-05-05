@@ -32,8 +32,8 @@ class ImageToObservationTest(object):
         nt.assert_true(gps[0] + 33.87546 < 0.0001)
         nt.assert_true(gps[1] + 116.30161 < 0.0001)
 
-        gps = jobs.detect_exif_gps(self.file_path)
-        nt.assert_is_none(gps)
+        with nt.assert_raises(jobs.NoGPSData):
+            jobs.detect_exif_gps(self.file_path)
 
     @nt.with_setup(setup, teardown)
     def test_convert_poly(self):
