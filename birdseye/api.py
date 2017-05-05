@@ -182,7 +182,12 @@ class MappedObservations(Resource):
     def _remap(self, record):
         title = ', '.join([
             label for _, label in record.properties['vision_labels'][:3]])
-        author = record.user.social if record.user is not None else 'Yo boss!'
+        author = 'Yo boss! Whazzuuupp!'
+        if record.user_id is not None:
+            # I'm not happy with this approach!
+            user = bm.User.find_by_id(record.user_id)
+            if user:
+                author = user.social
         return {
             'id': record.observation_id,
             'type': 'Feature',
@@ -191,6 +196,7 @@ class MappedObservations(Resource):
                 'title': title,
                 'place': title,
                 'login': author,
+                'vision_labels': record.properties['vision_labels']
             },
             'geometry': record.geometry
         }

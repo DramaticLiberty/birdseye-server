@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+import io
+import json
+
 import nose.tools as nt
+
 import birdseye.jobs as jobs
 import birdseye.models as bm
+from birdseye.pubsub_tests import TESTCONFIG, teardown_singleton_pubsub
 
 
 class ImageToObservationTest(object):
@@ -12,7 +17,7 @@ class ImageToObservationTest(object):
         self.file_url = 'https://birdseye.space/birdseye.png'
 
     def teardown(self):
-        pass
+        teardown_singleton_pubsub()
 
     @nt.with_setup(setup, teardown)
     def test_file_path_url(self):
@@ -49,6 +54,9 @@ class ImageToObservationTest(object):
         session.commit()
         obs = session.query(bm.Observation).all()
         nt.assert_equals(obs, [])
+
+        teardown_singleton_pubsub()
+        jobs.ps.PubSub(io.StringIO(json.dumps(TESTCONFIG)))
 
         jobs.image_to_observation(self.file_path_gps, self.file_path)
         obs = session.query(bm.Observation).all()

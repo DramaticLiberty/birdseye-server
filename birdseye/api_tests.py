@@ -184,7 +184,10 @@ class ObservationTest:
         nt.assert_equal(len(resp['data']), 1)
         nt.assert_equal(
             sorted(resp['data'][0].keys()),
-            ['coordinates', 'created', 'id', 'subtitle', 'title', 'type'])
+            ['created', 'geometry', 'id', 'properties', 'type'])
+        nt.assert_equal(
+            sorted(resp['data'][0]['properties'].keys()),
+            ['login', 'place', 'title', 'vision_labels'])
 
     @nt.with_setup(setup, teardown)
     def test_get_mapped_observations(self):
