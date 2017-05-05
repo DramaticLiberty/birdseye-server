@@ -26,7 +26,7 @@ Conventions
     }
 
 '''
-from flask import request
+from flask import request, json
 from flask_restful import Resource, Api, representations
 import os
 import types
@@ -198,13 +198,15 @@ class MappedObservations(Resource):
                 'login': author,
                 'vision_labels': record.properties['vision_labels']
             },
-            'geometry': record.geometry
+            'geometry': json.loads(record.geometry)
         }
 
     def get(self):
         rows = bm.Observation.find_all_mapped()
-        return _success_data(count=len(rows), data=[
-            self._remap(record) for record in rows])
+        mapped = [self._remap(record) for record in rows]
+        return _success(
+            200, count=str(len(rows)), data=mapped,
+            type='FeatureCollection', features=mapped)
 
 
 @api.route('/v1/observations/<uuid:observation_id>')
