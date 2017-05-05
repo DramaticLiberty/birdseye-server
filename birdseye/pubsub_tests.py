@@ -2,20 +2,32 @@
 from collections import deque
 import io
 import json
+import random
 
 import nose.tools as nt
 
 import birdseye.pubsub as pubsub
 
 
+random.seed()
+
+
+def _randstr(length=6):
+    return '{0:0{length}x}'.format(random.randint(0, 16**length), length=length)
+
+
+def _make_channel(base):
+    return '{0}.{1}'.format(base, _randstr())
+
+
 TESTCONFIG = {
-    "subscribe_key": "demo",
-    "publish_key": "demo",
-    "ssl": False,
-    "reconnect_policy": "linear",
-    "channels": ["testChannel1", "testChannel2"],
-    "channel_groups": ["testChannelGroup1", "testChannelGroup2"],
-    "publish_channel": "testChannel",
+    'subscribe_key': 'demo',
+    'publish_key': 'demo',
+    'ssl': False,
+    'reconnect_policy': 'linear',
+    'channels': [_make_channel('testChan'), _make_channel('testChan')],
+    'channel_groups': [_make_channel('testGroup')],
+    'publish_channel': _make_channel('testChan')
 }
 
 
@@ -69,20 +81,13 @@ class PubSubMisconfigurationTest(object):
         self.pubsub = pubsub.PubSub(io.StringIO(json.dumps(self.conf)))
         with nt.assert_raises(pubsub.PubSubError):
             self.pubsub.subscribe(self.listener)
-        self.pubsub.subscribe(self.listener, channels=['testChannel'])
-        self.pubsub.publish('foo1')
-        nt.assert_in('foo1', self.listener.messages)
 
     @nt.with_setup(setup, teardown)
     def test_no_publish_channel(self):
         del self.conf['publish_channel']
         self.pubsub = pubsub.PubSub(io.StringIO(json.dumps(self.conf)))
-        print(">{}<".format(self.pubsub._publish_chan))
         with nt.assert_raises(pubsub.PubSubError):
             self.pubsub.publish('foo')
-        self.pubsub.subscribe(self.listener)
-        self.pubsub.publish('foo2', channel='testChannel1')
-        nt.assert_in('foo2', self.listener.messages)
 
 
 class PubSubTest(object):
@@ -95,5 +100,19 @@ class PubSubTest(object):
         self.pubsub.unsubscribe_all()
 
     @nt.with_setup(setup, teardown)
-    def test_subscribe_and_publish(self):
-        pass
+    def test_subscribe_and_publish_as_configured(self):
+        self.pubsub.subscribe(self.listener)
+        self.listener.wait_for_connect()
+        data = _randstr()
+        self.pubsub.publish(data)
+        nt.assert_in(data, self.listener.messages)
+
+    @nt.with_setup(setup, teardown)
+    def test_subscribe_and_publish_custom_channel(self):
+        self.pubsub.subscribe(self.listener)
+        data = _randstr()
+        ch = _make_channel()
+        self.pubsub.subscribe(self.listener, channels=[ch])
+        self.listener.wait_for_connect()
+        self.pubsub.publish(data, channel=ch)
+        nt.assert_in(data, self.listener.messages)

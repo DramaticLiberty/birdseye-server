@@ -132,7 +132,6 @@ class PubSub(object, metaclass=Singleton):
         self.pubnub = PubNub(self.pnconfig)
 
     def subscribe(self, listener, channels=None, chgroups=None):
-        # TODO: make sure subscribe gets published messages immediately
         ch = channels or self._channels
         chg = chgroups or self._chgroups
         if not(ch or chg):

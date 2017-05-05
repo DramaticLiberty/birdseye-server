@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+import unittest.mock as mock
+
 import nose.tools as nt
+
 import birdseye.jobs as jobs
 import birdseye.models as bm
+from birdseye.pubsub_tests import TESTCONFIG
 
 
 class ImageToObservationTest(object):
@@ -43,6 +47,7 @@ class ImageToObservationTest(object):
         nt.assert_true(gps_poly.startswith('POLYGON('))
 
     @nt.with_setup(setup, teardown)
+    @mock.patch('birdseye.pubsub.CONFIG', TESTCONFIG)
     def test_image_to_obs(self):
         session = jobs.db_session()
         session.query(bm.Observation).delete()
