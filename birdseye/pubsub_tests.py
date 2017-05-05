@@ -24,11 +24,17 @@ TESTCONFIG = {
     'subscribe_key': 'demo',
     'publish_key': 'demo',
     'ssl': False,
-    'reconnect_policy': 'linear',
+    'reconnect_policy': None,
     'channels': [_make_channel('testChan'), _make_channel('testChan')],
     'channel_groups': [_make_channel('testGroup')],
     'publish_channel': _make_channel('testChan')
 }
+
+
+def teardown_singleton_pubsub():
+    instances = pubsub.Singleton._instances
+    if pubsub.PubSub in instances:
+        del instances[pubsub.PubSub]
 
 
 class _TestListener(pubsub.SubscribeListener):
@@ -57,9 +63,7 @@ class PubSubMisconfigurationTest(object):
         if hasattr(self, 'pubsub'):
             self.pubsub.unsubscribe_all()
             del self.pubsub
-        instances = pubsub.Singleton._instances
-        if pubsub.PubSub in instances:
-            del instances[pubsub.PubSub]
+        teardown_singleton_pubsub()
 
     @nt.with_setup(setup, teardown)
     def test_no_subscribe_key(self):
@@ -97,7 +101,8 @@ class PubSubTest(object):
         self.listener = _TestListener()
 
     def teardown(self):
-        self.pubsub.unsubscribe_all()
+        #self.pubsub.unsubscribe_all()
+        pass
 
     @nt.with_setup(setup, teardown)
     def test_subscribe_and_publish_as_configured(self):
