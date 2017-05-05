@@ -180,14 +180,22 @@ class Observations(Resource):
 class MappedObservations(Resource):
 
     def _remap(self, record):
+        title = ', '.join([
+            label for _, label in record.properties['vision_labels'][:3]])
+        import ipdb; ipdb.set_trace()
         return {
             'id': record.observation_id,
+            'type': 'Feature',
             'created': record.created.isoformat(),
-            'title': ', '.join([
-                label for _, label in record.properties['vision_labels'][:3]]),
-            'subtitle': '',
-            'coordinates': [record.geox, record.geoy],
-            'type': 'point',
+            'properties': {
+                'title': title,
+                'place': title,
+                'login': 'Yo boss, whazzuuup!',
+            },
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [record.geox, record.geoy],
+            }
         }
 
     def get(self):
