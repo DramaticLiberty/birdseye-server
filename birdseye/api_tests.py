@@ -185,7 +185,8 @@ class ObservationTest:
         nt.assert_equal(resp['data'], resp['features'])
         nt.assert_equal(
             sorted(resp['data'][0].keys()),
-            ['created', 'geometry', 'id', 'properties', 'type'])
+            ['author', 'created', 'geometry', 'id', 'media', 'observation_id',
+             'properties', 'species', 'type'])
         nt.assert_equal(
             sorted(resp['data'][0]['properties'].keys()),
             ['login', 'place', 'title', 'vision_labels'])
@@ -196,6 +197,11 @@ class ObservationTest:
     @nt.with_setup(setup, teardown)
     def test_get_mapped_observations(self):
         resp = assert_ok(200, self.client.get('/v1/mapped_observations'))
+        nt.assert_equal(resp['count'], '1')
+
+    @nt.with_setup(setup, teardown)
+    def test_get_all_observations(self):
+        resp = assert_ok(200, self.client.get('/v1/observations'))
         nt.assert_equal(resp['count'], '1')
 
     @nt.with_setup(setup, teardown)

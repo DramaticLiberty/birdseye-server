@@ -7,7 +7,7 @@ from psycopg2.extensions import AsIs
 from psycopg2.extras import Json
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import Text, text, ForeignKey, Table, Column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property
 from geoalchemy2 import Geometry
 
 from birdseye import db
@@ -237,6 +237,8 @@ class Observation(CMDR, db.Model):
 
     user = relationship('User')
     species = relationship('Species')
+    geometry_center = column_property(
+        geometry.ST_Centroid().ST_AsGeoJSON().cast(JSONB))
 
     def __init__(self, user, geometry, media, properties=None, species=None):
         self.user_id = user.user_id if user is not None else None
@@ -255,7 +257,8 @@ class Observation(CMDR, db.Model):
             'media': self.media,
             'properties': self.properties,
             'species': self.species.as_public_dict() if self.species else None,
-            'author': self.user.social if self.user is not None else 'Unknown',
+            'author': self.user.social if self.user is not None else {
+                'nickname': 'Unknown'},
         }
 
     def __repr__(self):
@@ -274,20 +277,6 @@ class Observation(CMDR, db.Model):
     def delete_all(cls):
         result = cls.query.delete()
         return result
-
-    @classmethod
-    def find_all_mapped(cls):
-        session = cls.query.session
-        query = session.query(
-            cls.created,
-            cls.observation_id,
-            cls.user_id,
-            cls.geometry.ST_Centroid().ST_AsGeoJSON().label('geometry'),
-            cls.media,
-            cls.properties,
-            cls.species_id,
-        )
-        return query.order_by(cls.created).all()
 
 
 observation_summary = Table(

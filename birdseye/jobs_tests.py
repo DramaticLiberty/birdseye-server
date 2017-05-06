@@ -33,9 +33,10 @@ class ImageToObservationTest(object):
         gps = jobs.detect_exif_gps(self.file_path_gps)
         nt.assert_is_not_none(gps)
         nt.assert_equal(len(gps), 2)
-        # -33.87546081542969, -116.3016196017795
-        nt.assert_true(gps[0] + 33.87546 < 0.0001)
-        nt.assert_true(gps[1] + 116.30161 < 0.0001)
+        # lon, lat
+        # -116.3016196017795, -33.87546081542969
+        nt.assert_true(gps[0] + 116.30161 < 0.0001)
+        nt.assert_true(gps[1] + 33.87546 < 0.0001)
 
         with nt.assert_raises(jobs.NoGPSData):
             jobs.detect_exif_gps(self.file_path)
