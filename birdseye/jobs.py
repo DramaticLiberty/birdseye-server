@@ -77,20 +77,20 @@ def detect_exif_gps(file_path):
     gps = {piexif.TAGS[IFD][tag]['name']: val
            for tag, val in exif_dict[IFD].items()}
     try:
-        lat = dms_as_float(
-            gps['GPSLatitude'], gps['GPSLatitudeRef'] != 'N')
         lon = dms_as_float(
             gps['GPSLongitude'], gps['GPSLongitudeRef'] != 'E')
+        lat = dms_as_float(
+            gps['GPSLatitude'], gps['GPSLatitudeRef'] != 'N')
     except KeyError:
         raise NoGPSData()
-    return lat, lon
+    return lon, lat
 
 
-def make_poly(lat, lon, radius):
+def make_poly(lon, lat, radius):
     poly = [(-1.0, 0.0), (0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)]
     poly_geo = ', '.join(
-        '{} {}'.format(lat + latm * radius, lon + lonm * radius)
-        for latm, lonm in poly)
+        '{} {}'.format(lon + lonm * radius, lat + latm * radius)
+        for lonm, latm in poly)
     return 'POLYGON(({}))'.format(poly_geo)
 
 
@@ -104,8 +104,8 @@ def image_to_observation(file_path, image_url):
     media = {'url': image_url}
     properties = {}
     try:
-        lat, lon = detect_exif_gps(file_path)
-        geom = make_poly(lat, lon, 0.000001)
+        lon, lat = detect_exif_gps(file_path)
+        geom = make_poly(lon, lat, 0.000001)
         labels = [[s, l] for s, l in detect_labels(image_url) if s > 0.55]
         properties = {'vision_labels': labels}
     except Exception as e:
