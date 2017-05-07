@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import io
-import json
+
+from unittest.mock import patch
 
 import nose.tools as nt
 
 import birdseye.jobs as jobs
 import birdseye.models as bm
-from birdseye.pubsub_tests import TESTCONFIG, teardown_singleton_pubsub
+from birdseye.pubsub_tests import teardown_singleton_pubsub
 
 
 class ImageToObservationTest(object):
@@ -47,8 +47,10 @@ class ImageToObservationTest(object):
         nt.assert_is_not_none(gps_poly)
         nt.assert_true(gps_poly.startswith('POLYGON('))
 
+    @patch('birdseye.jobs.detect_labels', autospec=True)
+    @patch('birdseye.pubsub.PubSub', autospec=True)
     @nt.with_setup(setup, teardown)
-    def test_image_to_obs(self):
+    def test_image_to_obs(self, mock_ps, mock_dl):
         session = jobs.db_session()
         session.query(bm.Observation).delete()
         session.commit()
@@ -56,8 +58,17 @@ class ImageToObservationTest(object):
         nt.assert_equals(obs, [])
 
         teardown_singleton_pubsub()
-        jobs.ps.PubSub(io.StringIO(json.dumps(TESTCONFIG)))
+        mock_dl.return_value = [(7.0, 'mockingbird')]
 
         jobs.image_to_observation(self.file_path_gps, self.file_path)
+
         obs = session.query(bm.Observation).all()
+
+        # TODO: test better what's in this obs
         nt.assert_equals(len(obs), 1)
+
+        mock_dl.assert_called_once_with(self.file_path)
+        mock_ps.assert_called_once_with()
+        # as long as we return the repr of geometry, we cannot do this assert:
+        # mock_ps().publish.assert_called_once_with(obs[0].as_public_dict())
+        nt.assert_equals(mock_ps().publish.call_count, 1)
