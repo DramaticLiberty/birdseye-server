@@ -102,7 +102,7 @@ class PubSub(object, metaclass=Singleton):
             raise PubSubError("publish key is not configured")
         self.pnconfig.ssl = conf.get("ssl", False)
         self._channels = conf.get("channels")
-        self.pubnub = _PubNub(self.pnconfig)
+        self._pubnub = PubNub(self.pnconfig)
 
     def publish(self, data, meta=None, channels=None):
         # TODO: throttle or queue up messages
@@ -113,7 +113,7 @@ class PubSub(object, metaclass=Singleton):
             raise PubSubError("need publish channel")
 
         for ch in chs:
-            p = self.pubnub.publish().channel(ch)
+            p = self._pubnub.publish().channel(ch)
             p.message(data)
             if meta:
                 p.meta(meta)
