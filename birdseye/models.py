@@ -271,6 +271,12 @@ class Observation(CMDR, db.Model):
         return query.order_by(cls.created).first()
 
     @classmethod
+    def find_by_id_mapped(cls, observation_id):
+        session = cls.query.session
+        query = session.query.filter(cls.observation_id == str(observation_id))
+        return query.order_by(cls.created).first()
+
+    @classmethod
     def delete_all(cls):
         result = cls.query.delete()
         return result
