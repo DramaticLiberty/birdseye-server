@@ -18,6 +18,8 @@ def set_path_and_utc(db_conn, conn_proxy):
     c.execute("SET timezone='utc'")
     c.execute('SET search_path=public, contrib;')
     c.close()
+
+
 sqlalchemy.event.listen(sqlalchemy.pool.Pool, 'connect', set_path_and_utc)
 
 

@@ -47,6 +47,7 @@ def api_route(self, *args, **kwargs):
         return cls
     return wrapper
 
+
 api.route = types.MethodType(api_route, api)
 
 
