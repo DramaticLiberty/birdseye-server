@@ -250,8 +250,6 @@ class Observation(CMDR, db.Model, PublicOpsMixin):
     def __repr__(self):
         return '<Observation %r>' % self.observation_id
 
-    @classmethod
-
 
 observation_summary = Table(
     'observation_summary', db.Model.metadata,
