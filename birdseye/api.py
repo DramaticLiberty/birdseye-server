@@ -180,27 +180,27 @@ class Observations(Resource):
 @api.route('/v1/mapped_observations')
 class MappedObservations(Resource):
 
-    def _remap(self, record):
+    def _remap(self, obs):
+        result = obs.as_public_dict()
         title = ', '.join([
-            label for _, label in record.properties['vision_labels'][:3]])
-        author = record.social or 'Anonymous Coward'
-        return {
-            'id': record.observation_id,
+            label for _, label in obs.properties['vision_labels'][:3]])
+        result['properties'].update({
+            'title': title,
+            'place': title,
+            'login': result['author'].get('nickname', 'Yo boss! Whazzuuupp!'),
+        })
+        result.update({
+            'geometry': obs.geometry_center,
+            'id': obs.observation_id,
             'type': 'Feature',
-            'created': record.created.isoformat(),
-            'properties': {
-                'title': title,
-                'place': title,
-                'login': author,
-                'vision_labels': record.properties['vision_labels']
-            },
-            'geometry': record.geometry
-        }
+        })
+        return result
 
     def get(self):
-        rows = bm.Observation.find_all_mapped()
-        return _success_data(count=len(rows), data=[
-            self._remap(record) for record in rows])
+        mapped = [self._remap(obs) for obs in bm.Observation.find_all()]
+        return _success(
+            200, count=str(len(mapped)), data=mapped,
+            type='FeatureCollection', features=mapped)
 
 
 @api.route('/v1/observations/<uuid:observation_id>')
