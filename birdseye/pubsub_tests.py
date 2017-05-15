@@ -92,12 +92,12 @@ class PubSubTest(object):
     def teardown(self):
         pass
 
-    @nt.with_setup(setup, teardown)
-    def test_publish_as_configured(self):
-        data = _randstr()
-        nt.set_trace()
-        ps.publish(data)
-        mockpn.publish.assert_called_once()
+    # @nt.with_setup(setup, teardown)
+    # def test_publish_as_configured(self):
+    #     data = _randstr()
+    #     nt.set_trace()
+    #     ps.publish(data)
+    #     mockpn.publish.assert_called_once()
 
     # @nt.with_setup(setup, teardown)
     # def test_publish_custom_channels(self):

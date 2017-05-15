@@ -94,7 +94,29 @@ class CMDR(object):
     )
 
 
-class User(CMDR, db.Model):
+class PublicOpsMixin(object):
+
+    @classmethod
+    def find_by_id(cls, id_):
+        return cls.query.get(str(id_))
+
+    @classmethod
+    def delete_all(cls):
+        result = cls.query.delete()
+        return result
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.order_by(cls.created).all()
+
+
+class DeletableMixin(object):
+
+    def delete(self):
+        return self.query.delete()
+
+
+class User(CMDR, db.Model, PublicOpsMixin):
     '''Users, many are present in the database.'''
     __tablename__ = 'users'
     user_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -124,20 +146,6 @@ class User(CMDR, db.Model):
         return '<User %r>' % self.user_id
 
     @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-    @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
-
-    @classmethod
-    def find_by_id(cls, user_id):
-        query = cls.query.filter(cls.user_id == str(user_id))
-        return query.order_by(cls.created).first()
-
-    @classmethod
     def find_by_credentials(cls, credentials, secrets):
         query = cls.query.filter(
             text('credentials = :credentials and secrets = :secrets'))
@@ -146,7 +154,7 @@ class User(CMDR, db.Model):
         return query.order_by(cls.created).first()
 
 
-class Session(CMDR, db.Model):
+class Session(CMDR, db.Model, PublicOpsMixin, DeletableMixin):
     '''User sessions'''
     __tablename__ = 'sessions'
     session_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -176,23 +184,8 @@ class Session(CMDR, db.Model):
     def __repr__(self):
         return '<Session %r>' % self.session_id
 
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
 
-    @classmethod
-    def delete(cls, session_id):
-        return cls.query.filter(
-            cls.session_id == str(session_id)).delete()
-
-    @classmethod
-    def find_by_id(cls, session_id):
-        query = cls.query.filter(cls.session_id == str(session_id))
-        return query.order_by(cls.created).first()
-
-
-class Species(CMDR, db.Model):
+class Species(CMDR, db.Model, PublicOpsMixin):
     '''Species table (maps species to labels)'''
     __tablename__ = 'species'
     species_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -215,17 +208,8 @@ class Species(CMDR, db.Model):
     def __repr__(self):
         return '<Species %r>' % self.observation_id
 
-    @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
 
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-
-class Observation(CMDR, db.Model):
+class Observation(CMDR, db.Model, PublicOpsMixin):
     '''An observation by a user. Timestamped, geostamped, public.'''
     __tablename__ = 'observations'
     observation_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -264,31 +248,17 @@ class Observation(CMDR, db.Model):
         return '<Observation %r>' % self.observation_id
 
     @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
-
-    @classmethod
-    def find_by_id(cls, observation_id):
-        query = cls.query.filter(cls.observation_id == str(observation_id))
-        return query.order_by(cls.created).first()
-
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-    @classmethod
     def find_all_mapped(cls):
         session = cls.query.session
         query = session.query(
             cls.created,
             cls.observation_id,
-            cls.user_id,
             cls.geometry.ST_Centroid().ST_AsGeoJSON().label('geometry'),
             cls.media,
             cls.properties,
             cls.species_id,
-        )
+            User.social,
+        ).outerjoin(User)
         return query.order_by(cls.created).all()
 
 
@@ -299,7 +269,7 @@ observation_summary = Table(
 )
 
 
-class Summary(CMDR, db.Model):
+class Summary(CMDR, db.Model, PublicOpsMixin):
     '''Results of calculations over observations'''
     __tablename__ = 'summaries'
     summary_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -324,8 +294,3 @@ class Summary(CMDR, db.Model):
 
     def __repr__(self):
         return '<Summary %r>' % self.summary_id
-
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
