@@ -8,6 +8,7 @@ from psycopg2.extras import Json
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import Text, text, ForeignKey, Table, Column
 from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.ext.declarative import declared_attr
 from geoalchemy2 import Geometry
 
 from birdseye import db
@@ -73,26 +74,46 @@ def new_uuid():
     return str(uuid.uuid4())
 
 
-class CMDR(object):
+class CommonModel(object):
     '''Created, Modified, Deleted, Replication.'''
-    created = db.Column(
-        db.DateTime(),
-        default=datetime.utcnow,
-        nullable=False
-    )
-    modified = db.Column(
-        db.DateTime(),
-        default=None,
-        onupdate=datetime.utcnow
-    )
-    deleted = db.Column(
-        db.DateTime(),
-        default=None,
-        onupdate=datetime.utcnow
-    )
+    # http://docs.sqlalchemy.org/en/latest/orm/extensions/declarative/mixins.html
+
+    @declared_attr
+    def created(cls):
+        return db.Column(
+            db.DateTime(),
+            nullable=False,
+            server_default=text("(now() at time zone 'utc')"),
+        )
+
+    @declared_attr
+    def modified(cls):
+        return db.Column(
+            db.DateTime(),
+            nullable=False,
+            server_default=text("(now() at time zone 'utc')"),
+            onupdate=text("(now() at time zone 'utc')"),
+        )
+
+    @declared_attr
+    def deleted(cls):
+        return db.Column(
+            db.DateTime(),
+            server_default=text('NULL'),
+        )
+
+    @classmethod
+    def delete_all(cls):
+        # import ipdb; ipdb.set_trace()
+        result = cls.query.delete()
+        return result
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.order_by(cls.created).all()
 
 
-class User(CMDR, db.Model):
+class User(CommonModel, db.Model):
     '''Users, many are present in the database.'''
     __tablename__ = 'users'
     user_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -122,15 +143,6 @@ class User(CMDR, db.Model):
         return '<User %r>' % self.user_id
 
     @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-    @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
-
-    @classmethod
     def find_by_id(cls, user_id):
         query = cls.query.filter(cls.user_id == str(user_id))
         return query.order_by(cls.created).first()
@@ -144,7 +156,7 @@ class User(CMDR, db.Model):
         return query.order_by(cls.created).first()
 
 
-class Session(CMDR, db.Model):
+class Session(CommonModel, db.Model):
     '''User sessions'''
     __tablename__ = 'sessions'
     session_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -175,11 +187,6 @@ class Session(CMDR, db.Model):
         return '<Session %r>' % self.session_id
 
     @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-    @classmethod
     def delete(cls, session_id):
         return cls.query.filter(
             cls.session_id == str(session_id)).delete()
@@ -190,7 +197,7 @@ class Session(CMDR, db.Model):
         return query.order_by(cls.created).first()
 
 
-class Species(CMDR, db.Model):
+class Species(CommonModel, db.Model):
     '''Species table (maps species to labels)'''
     __tablename__ = 'species'
     species_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -213,17 +220,8 @@ class Species(CMDR, db.Model):
     def __repr__(self):
         return '<Species %r>' % self.observation_id
 
-    @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
 
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
-
-
-class Observation(CMDR, db.Model):
+class Observation(CommonModel, db.Model):
     '''An observation by a user. Timestamped, geostamped, public.'''
     __tablename__ = 'observations'
     observation_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -265,18 +263,9 @@ class Observation(CMDR, db.Model):
         return '<Observation %r>' % self.observation_id
 
     @classmethod
-    def find_all(cls):
-        return cls.query.order_by(cls.created).all()
-
-    @classmethod
     def find_by_id(cls, observation_id):
         query = cls.query.filter(cls.observation_id == str(observation_id))
         return query.order_by(cls.created).first()
-
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
 
 
 observation_summary = Table(
@@ -286,7 +275,7 @@ observation_summary = Table(
 )
 
 
-class Summary(CMDR, db.Model):
+class Summary(CommonModel, db.Model):
     '''Results of calculations over observations'''
     __tablename__ = 'summaries'
     summary_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -311,8 +300,3 @@ class Summary(CMDR, db.Model):
 
     def __repr__(self):
         return '<Summary %r>' % self.summary_id
-
-    @classmethod
-    def delete_all(cls):
-        result = cls.query.delete()
-        return result
