@@ -185,8 +185,8 @@ class ObservationTest:
         nt.assert_equal(resp['data'], resp['features'])
         nt.assert_equal(
             sorted(resp['data'][0].keys()),
-            ['author', 'created', 'geometry', 'id', 'media', 'observation_id',
-             'properties', 'species', 'type'])
+            ['created', 'geometry', 'id', 'media', 'observation_id',
+             'properties', 'species', 'type', 'user'])
         nt.assert_equal(
             sorted(resp['data'][0]['properties'].keys()),
             ['login', 'place', 'title', 'vision_labels'])

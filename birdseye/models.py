@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
-import flask.json
-import sqlalchemy
-import uuid
 from datetime import datetime, timedelta
+import uuid
+
+from geoalchemy2 import Geometry
+from geoalchemy2.elements import WKBElement, WKTElement
+
+import flask.json
+
 from psycopg2.extensions import AsIs
 from psycopg2.extras import Json
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+
+import sqlalchemy
 from sqlalchemy import Text, text, ForeignKey, Table, Column
-from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declared_attr
-from geoalchemy2 import Geometry
+from sqlalchemy.inspection import inspect
+from sqlalchemy.orm import relationship, column_property
 
 from birdseye import db
 
@@ -76,24 +82,24 @@ def new_uuid():
     return str(uuid.uuid4())
 
 
+def public(*public_col_names):
+    ''' Class decorator setting the PUBLIC attribute from:
+    - the decorated class attributes whos names are specified as args
+    - the PUBLIC attribute of the decorated class
+    '''
+    def wrap(klass):
+        extra = tuple([getattr(klass, a) for a in public_col_names])
+        public = getattr(klass, "PUBLIC", ())
+        setattr(klass, "PUBLIC", extra + public)
+        return klass
+    return wrap
+
+
 class CommonModel(object):
     '''Created, Modified, Deleted, Replication.'''
     # http://docs.sqlalchemy.org/en/latest/orm/extensions/declarative/mixins.html
 
     PUBLIC = ()
-
-    @staticmethod
-    def public(*public_col_names):
-        ''' Class decorator setting the PUBLIC attribute from:
-        - the decorated class attributes whos names are specified as args
-        - the PUBLIC attribute of the decorated class
-        '''
-        def wrap(klass):
-            extra = tuple([getattr(klass, a) for a in public_col_names])
-            public = getattr(klass, "PUBLIC", ())
-            setattr(klass, "PUBLIC", extra + public)
-            return klass
-        return wrap
 
     @declared_attr
     def created(cls):
@@ -132,8 +138,28 @@ class CommonModel(object):
     def find_by_id(cls, id_):
         return cls.query.get(str(id_))
 
+    def public_repr(self, item):
+        if isinstance(item, datetime):
+            return item.isoformat()
+        # TODO: find a way to automatically determine these
+        # maybe use the public decorator to append to a list
+        # TODO: if a User is None, None is returned instead of e.g.
+        # {'nickname': 'Unknown'}. Maybe for the better.
+        elif isinstance(item, (User, Session, Species, Observation, Summary)):
+            return item.as_public_dict()
+        # TODO: ?
+        elif isinstance(item, (WKBElement, WKTElement)):
+            return repr(item)
+        else:
+            return item
+
     def as_public_dict(self):
-        return {c.key: getattr(self, c.key) for c in self.PUBLIC}
+        return {c.key: self.public_repr(getattr(self, c.key))
+                for c in self.PUBLIC}
+
+    def __repr__(self):
+        return '<{} {!r}>'.format(
+            self.__class__.__name__, inspect(self).identity[0])
 
 
 class DeletableMixin(object):
@@ -160,9 +186,6 @@ class User(CommonModel, db.Model):
         self.secrets = secrets
         self.settings = settings or {}
         self.social = social or {}
-
-    def __repr__(self):
-        return '<User %r>' % self.user_id
 
     @classmethod
     def find_by_credentials(cls, credentials, secrets):
@@ -193,16 +216,6 @@ class Session(CommonModel, db.Model, DeletableMixin):
         self.user = user
         self.tokens = tokens or {}
 
-    def as_public_dict(self):
-        return {
-            'session_id': self.session_id,
-            'expires': self.expires,
-            'user': self.user.as_public_dict()
-        }
-
-    def __repr__(self):
-        return '<Session %r>' % self.session_id
-
 
 class Species(CommonModel, db.Model):
     '''Species table (maps species to labels)'''
@@ -219,10 +232,8 @@ class Species(CommonModel, db.Model):
         self.names = names
         self.labels = labels
 
-    def __repr__(self):
-        return '<Species %r>' % self.observation_id
 
-
+@public('created')
 class Observation(CommonModel, db.Model):
     '''An observation by a user. Timestamped, geostamped, public.'''
     __tablename__ = 'observations'
@@ -240,6 +251,8 @@ class Observation(CommonModel, db.Model):
     geometry_center = column_property(
         geometry.ST_Centroid().ST_AsGeoJSON().cast(JSONB))
 
+    PUBLIC = (observation_id, geometry, media, properties, species, user)
+
     def __init__(self, user, geometry, media, properties=None, species=None):
         self.user_id = user.user_id if user is not None else None
         self.user = user
@@ -249,21 +262,6 @@ class Observation(CommonModel, db.Model):
         self.species_id = species.species_id if species else None
         self.species = species
 
-    def as_public_dict(self):
-        return {
-            'created': self.created.isoformat(),
-            'observation_id': self.observation_id,
-            'geometry': repr(self.geometry),
-            'media': self.media,
-            'properties': self.properties,
-            'species': self.species.as_public_dict() if self.species else None,
-            'author': self.user.social if self.user is not None else {
-                'nickname': 'Unknown'},
-        }
-
-    def __repr__(self):
-        return '<Observation %r>' % self.observation_id
-
 
 observation_summary = Table(
     'observation_summary', db.Model.metadata,
@@ -272,7 +270,7 @@ observation_summary = Table(
 )
 
 
-@CommonModel.public('created')
+@public('created')
 class Summary(CommonModel, db.Model):
     '''Results of calculations over observations'''
     __tablename__ = 'summaries'
@@ -289,14 +287,3 @@ class Summary(CommonModel, db.Model):
         self.properties = properties
         self.geometry = geometry
         self.observations = observations or []
-
-    def as_public_dict(self):
-        return {
-            'created': self.created.isoformat(),
-            'summary_id': self.summary_id,
-            'properties': self.properties,
-            'geometry': repr(self.geometry),
-        }
-
-    def __repr__(self):
-        return '<Summary %r>' % self.summary_id
