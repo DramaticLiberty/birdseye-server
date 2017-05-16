@@ -8,6 +8,7 @@ from psycopg2.extras import Json
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy import Text, text, ForeignKey, Table, Column
 from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.ext.declarative import declared_attr
 from geoalchemy2 import Geometry
 
 from birdseye import db
@@ -75,30 +76,33 @@ def new_uuid():
     return str(uuid.uuid4())
 
 
-class CMDR(object):
+class CommonModel(object):
     '''Created, Modified, Deleted, Replication.'''
-    created = db.Column(
-        db.DateTime(),
-        default=datetime.utcnow,
-        nullable=False
-    )
-    modified = db.Column(
-        db.DateTime(),
-        default=None,
-        onupdate=datetime.utcnow
-    )
-    deleted = db.Column(
-        db.DateTime(),
-        default=None,
-        onupdate=datetime.utcnow
-    )
+    # http://docs.sqlalchemy.org/en/latest/orm/extensions/declarative/mixins.html
 
+    @declared_attr
+    def created(cls):
+        return db.Column(
+            db.DateTime(),
+            nullable=False,
+            server_default=text("(now() at time zone 'utc')"),
+        )
 
-class PublicOpsMixin(object):
+    @declared_attr
+    def modified(cls):
+        return db.Column(
+            db.DateTime(),
+            nullable=False,
+            server_default=text("(now() at time zone 'utc')"),
+            onupdate=text("(now() at time zone 'utc')"),
+        )
 
-    @classmethod
-    def find_by_id(cls, id_):
-        return cls.query.get(str(id_))
+    @declared_attr
+    def deleted(cls):
+        return db.Column(
+            db.DateTime(),
+            server_default=text('NULL'),
+        )
 
     @classmethod
     def delete_all(cls):
@@ -109,6 +113,10 @@ class PublicOpsMixin(object):
     def find_all(cls):
         return cls.query.order_by(cls.created).all()
 
+    @classmethod
+    def find_by_id(cls, id_):
+        return cls.query.get(str(id_))
+
 
 class DeletableMixin(object):
 
@@ -116,7 +124,7 @@ class DeletableMixin(object):
         return self.query.delete()
 
 
-class User(CMDR, db.Model, PublicOpsMixin):
+class User(CommonModel, db.Model):
     '''Users, many are present in the database.'''
     __tablename__ = 'users'
     user_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -154,7 +162,7 @@ class User(CMDR, db.Model, PublicOpsMixin):
         return query.order_by(cls.created).first()
 
 
-class Session(CMDR, db.Model, PublicOpsMixin, DeletableMixin):
+class Session(CommonModel, db.Model, DeletableMixin):
     '''User sessions'''
     __tablename__ = 'sessions'
     session_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -184,8 +192,7 @@ class Session(CMDR, db.Model, PublicOpsMixin, DeletableMixin):
     def __repr__(self):
         return '<Session %r>' % self.session_id
 
-
-class Species(CMDR, db.Model, PublicOpsMixin):
+class Species(CommonModel, db.Model):
     '''Species table (maps species to labels)'''
     __tablename__ = 'species'
     species_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -209,7 +216,7 @@ class Species(CMDR, db.Model, PublicOpsMixin):
         return '<Species %r>' % self.observation_id
 
 
-class Observation(CMDR, db.Model, PublicOpsMixin):
+class Observation(CommonModel, db.Model):
     '''An observation by a user. Timestamped, geostamped, public.'''
     __tablename__ = 'observations'
     observation_id = db.Column(UUID, primary_key=True, default=new_uuid)
@@ -258,7 +265,7 @@ observation_summary = Table(
 )
 
 
-class Summary(CMDR, db.Model, PublicOpsMixin):
+class Summary(CommonModel, db.Model):
     '''Results of calculations over observations'''
     __tablename__ = 'summaries'
     summary_id = db.Column(UUID, primary_key=True, default=new_uuid)
