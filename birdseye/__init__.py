@@ -17,12 +17,14 @@ def _get_version():
         import setuptools_scm
         return setuptools_scm.get_version(root='..', relative_to=__file__)
 
+
 __version__ = _get_version()
 
 
 def get_semver():
     scm_ver = __version__
     return scm_ver[:scm_ver.index('.dev')] if '.dev' in scm_ver else scm_ver
+
 
 app = Flask(__name__)
 app.config.from_object('birdseye.default_settings')

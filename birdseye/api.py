@@ -47,6 +47,7 @@ def api_route(self, *args, **kwargs):
         return cls
     return wrapper
 
+
 api.route = types.MethodType(api_route, api)
 
 
@@ -183,10 +184,14 @@ class MappedObservations(Resource):
         result = obs.as_public_dict()
         title = ', '.join([
             label for _, label in obs.properties['vision_labels'][:3]])
+        if obs.user and obs.user.social and 'nickname' in obs.user.social:
+            login = obs.user.social['nickname']
+        else:
+            login = 'Yo boss! Whazzuuupp!'
         result['properties'].update({
             'title': title,
             'place': title,
-            'login': result['author'].get('nickname', 'Yo boss! Whazzuuupp!'),
+            'login': login,
         })
         result.update({
             'geometry': obs.geometry_center,
