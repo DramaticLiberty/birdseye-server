@@ -80,6 +80,21 @@ class CommonModel(object):
     '''Created, Modified, Deleted, Replication.'''
     # http://docs.sqlalchemy.org/en/latest/orm/extensions/declarative/mixins.html
 
+    PUBLIC = ()
+
+    @staticmethod
+    def public(*public_col_names):
+        ''' Class decorator setting the PUBLIC attribute from:
+        - the decorated class attributes whos names are specified as args
+        - the PUBLIC attribute of the decorated class
+        '''
+        def wrap(klass):
+            extra = tuple([getattr(klass, a) for a in public_col_names])
+            public = getattr(klass, "PUBLIC", ())
+            setattr(klass, "PUBLIC", extra + public)
+            return klass
+        return wrap
+
     @declared_attr
     def created(cls):
         return db.Column(
@@ -117,6 +132,9 @@ class CommonModel(object):
     def find_by_id(cls, id_):
         return cls.query.get(str(id_))
 
+    def as_public_dict(self):
+        return {c.key: getattr(self, c.key) for c in self.PUBLIC}
+
 
 class DeletableMixin(object):
 
@@ -135,20 +153,13 @@ class User(CommonModel, db.Model):
     settings = db.Column(JSONB, nullable=False)
     # public stuff: nickname, social links, etc.
     social = db.Column(JSONB)
+    PUBLIC = (user_id, credentials, settings, social)
 
     def __init__(self, credentials, secrets, settings=None, social=None):
         self.credentials = credentials
         self.secrets = secrets
         self.settings = settings or {}
         self.social = social or {}
-
-    def as_public_dict(self):
-        return {
-            'user_id': self.user_id,
-            'credentials': self.credentials,
-            'settings': self.settings,
-            'social': self.social,
-        }
 
     def __repr__(self):
         return '<User %r>' % self.user_id
@@ -192,6 +203,7 @@ class Session(CommonModel, db.Model, DeletableMixin):
     def __repr__(self):
         return '<Session %r>' % self.session_id
 
+
 class Species(CommonModel, db.Model):
     '''Species table (maps species to labels)'''
     __tablename__ = 'species'
@@ -201,16 +213,11 @@ class Species(CommonModel, db.Model):
     # label bingo: vision, user, etc
     labels = db.Column(JSONB, nullable=False)
 
+    PUBLIC = (species_id, names, labels)
+
     def __init__(self, names, labels):
         self.names = names
         self.labels = labels
-
-    def as_public_dict(self):
-        return {
-            'species_id': self.species_id,
-            'names': self.names,
-            'labels': self.labels,
-        }
 
     def __repr__(self):
         return '<Species %r>' % self.observation_id
@@ -265,6 +272,7 @@ observation_summary = Table(
 )
 
 
+@CommonModel.public('created')
 class Summary(CommonModel, db.Model):
     '''Results of calculations over observations'''
     __tablename__ = 'summaries'
@@ -274,6 +282,8 @@ class Summary(CommonModel, db.Model):
     geometry = db.Column(Geometry('POLYGON'), nullable=False)
 
     observations = relationship('Observation', secondary=observation_summary)
+
+    PUBLIC = (summary_id, properties, geometry)
 
     def __init__(self, properties, geometry, observations=None):
         self.properties = properties
